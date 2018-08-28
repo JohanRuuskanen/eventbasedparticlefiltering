@@ -81,14 +81,13 @@ function apf(y, sys, par)
     for k = 2:sys.T
 
 		# Calculate the auxiliary weights
-		for i = 1:par.N
+	for i = 1:par.N
             μ = sys.C * sys.A * X[i, :, k-1]
             Σ = sys.C * sys.Q * sys.C' + sys.R
-
-			q_aux_list[i] = MvNormal(μ, Σ)
-			V[i, k-1] = W[i, k-1] * pdf(q_aux_list[i], y[:,k])
-		end
-		V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
+	    q_aux_list[i] = MvNormal(μ, Σ)
+	    V[i, k-1] = W[i, k-1] * pdf(q_aux_list[i], y[:,k])
+	end
+	V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
 
         # Resample using systematic resampling
         #idx = rand(Categorical(W[:, k-1]), N)
@@ -105,7 +104,7 @@ function apf(y, sys, par)
         for i = 1:par.N
             Xr[i, :] = X[idx[i], :, k-1]
         end
-		q_aux_list = q_aux_list[idx]
+	q_aux_list = q_aux_list[idx]
 
         # Propagate
         for i = 1:par.N
@@ -121,7 +120,7 @@ function apf(y, sys, par)
         # Weight
         for i = 1:par.N
             W[i, k] = 	pdf(MvNormal(sys.C*X[i, :, k], sys.R), y[:, k]) *
-						pdf(MvNormal(sys.A*Xr[i, :], sys.Q), X[i, :, k]) /
+			pdf(MvNormal(sys.A*Xr[i, :], sys.Q), X[i, :, k]) /
                         (pdf(q_list[i], X[i, :, k]) * pdf(q_aux_list[i], y[:, k]))
         end
         W[:, k] = W[:, k] ./ sum(W[:, k])

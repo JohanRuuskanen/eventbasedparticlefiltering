@@ -159,10 +159,9 @@ function eapf(y, sys, par, δ)
             for i = 1:N
                 μ = C*A*X[i, :, k-1]
                 Σ = C*Q*C' + R
-
-        		q_aux_list[i] = MvNormal(μ, Σ)
-        		V[i, k-1] = W[i, k-1] * pdf(q_aux_list[i], y[:,k])
-        	end
+                q_aux_list[i] = MvNormal(μ, Σ)
+        	V[i, k-1] = W[i, k-1] * pdf(q_aux_list[i], Z[:,k])
+            end
         else
             for i = 1:par.N
                 μ = C*A*X[i, :, k-1]
@@ -179,7 +178,7 @@ function eapf(y, sys, par, δ)
 
             end
         end
-		V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
+	V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
 
 
         # Resample using systematic resampling
@@ -198,6 +197,7 @@ function eapf(y, sys, par, δ)
         for i = 1:N
             Xr[i, :] = X[idx[i], :, k-1]
         end
+        q_aux_list = q_aux_list[idx]
 
         # Propagate
         if Γ[k] == 1
@@ -243,9 +243,9 @@ function eapf(y, sys, par, δ)
         # Weight
         if Γ[k] == 1
             for i = 1:par.N
-                W[i, k] = pdf(MvNormal(C*X[i, :, k], R), y[:,k]) *
+                W[i, k] = pdf(MvNormal(C*X[i, :, k], R), Z[:,k]) *
                           pdf(MvNormal(A*Xr[i, :], Q), X[i, :, k]) /
-                          ((pdf(q_list[i], X[i, :, k]) * pdf(q_aux_list[i], y[:, k])))
+                          (pdf(q_list[i], X[i, :, k]) * pdf(q_aux_list[i], Z[:, k]))
             end
         else
             for i = 1:par.N
