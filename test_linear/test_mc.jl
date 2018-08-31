@@ -37,7 +37,7 @@ sinclude("/home/johanr/projects/EBPF/test_linear/testinclude.jl")
 sinclude("/home/johanr/projects/EBPF/src/misc.jl")
 sinclude("/home/johanr/projects/EBPF/test_linear/filters.jl")
 sinclude("/home/johanr/projects/EBPF/test_linear/filters_eventbased.jl")
-f = @spawnat 3 isdefined(:fix_sym)
+f = @spawnat 69 isdefined(:fix_sym)
 fetch(f)
 # Add common constants and functions
 @everywhere begin
@@ -72,43 +72,47 @@ fetch(f)
         X_eapf, W_eapf, xh_eapf, yh_eapf, Z_eapf, Γ_eapf = eapf(y, sys, par, δ)
 
         # Normal implementations
-        X_bpf, W_bpf = bpf(y, sys, par)
-        X_apf, W_apf = apf(y, sys, par)
+        #X_bpf, W_bpf = bpf(y, sys, par)
+        #X_apf, W_apf = apf(y, sys, par)
 
         xh_ebpf = zeros(nx, T)
         xh_eapf = zeros(nx, T)
-        xh_bpf = zeros(nx, T)
-        xh_apf = zeros(nx, T)
+        #xh_bpf = zeros(nx, T)
+        #xh_apf = zeros(nx, T)
         for k = 1:nx
             xh_ebpf[k, :] = sum(diag(W_ebpf'*X_ebpf[:, k, :]), 2)
             xh_eapf[k, :] = sum(diag(W_eapf'*X_eapf[:, k, :]), 2)
-            xh_bpf[k, :] = sum(diag(W_bpf'*X_bpf[:, k, :]), 2)
-            xh_apf[k, :] = sum(diag(W_apf'*X_apf[:, k, :]), 2)
+
+            #xh_bpf[k, :] = sum(diag(W_bpf'*X_bpf[:, k, :]), 2)
+            #xh_apf[k, :] = sum(diag(W_apf'*X_apf[:, k, :]), 2)
         end
 
         err_ebpf = x - xh_ebpf
         err_eapf = x - xh_eapf
-        err_bpf = x - xh_bpf
-        err_apf = x - xh_apf
+        #err_bpf = x - xh_bpf
+        #err_apf = x - xh_apf
 
         return Dict{String,Array{Float64}}(
                     "err_ebpf" => err_ebpf,
                     "err_eapf" => err_eapf,
-                    "err_bpf" => err_bpf,
-                    "err_apf" => err_apf)
+                    "trigg_ebpf" => Γ_ebpf,
+                    "trig_eapf" => Γ_eapf)
     end
 end
 
 """
 Run simulation
 """
+N = [10 25 50 75 100 150 200 250 300 350 400 500]
+Δ = [0 0.4 0.8 1.2 1.6 2.0 2.4 2.8 3.2 3.8 4.0]
+sims = 1000
 
-N = [10 50 100 150 200 250 300 350 400 450 500 600 700 800 900 1000 2000 3000 5000]
-Δ = [0]
-sims = 100
+#N = [10 50 100 150 200 250 300 350 400 450 500 600 700 800 900 1000 2000 3000 5000]
+#Δ = [0]
+#sims = 100
 
 path = "/home/johanr/projects/EBPF/data"
-folder = "/test_results_over_N"
+folder = "/test_linear_system"
 
 if !isdir(path*folder)
         mkdir(path*folder)

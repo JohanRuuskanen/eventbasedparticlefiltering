@@ -9,7 +9,7 @@ N = [10 50 100 150 200 250 300 350 400 450 500 600 700 800 900 1000 2000 3000 50
 
 m = length(N)
 n = length(Δ)
-k = 1000
+k = 100
 
 # MSE
 Err_ebpf = zeros(m, n, 2)
@@ -51,7 +51,7 @@ if x_axis == "particles"
         plot(N[:], Err_eapf[:, i2, 1], "ro", alpha=0.5)
         plot(N[:], Err_bpf[:, i2, 1], "bx", alpha=0.5)
         plot(N[:], Err_apf[:, i2, 1], "rx", alpha=0.5)
-        ylim([0, y_max1])
+        #ylim([0, y_max1])
         title(Δ[i2])
     end
     for i2 = 1:n
@@ -60,7 +60,7 @@ if x_axis == "particles"
         plot(N[:], Err_eapf[:, i2, 2], "ro", alpha=0.5)
         plot(N[:], Err_bpf[:, i2, 2], "bx", alpha=0.5)
         plot(N[:], Err_apf[:, i2, 2], "rx", alpha=0.5)
-        ylim([0, y_max2])
+        #ylim([0, y_max2])
         title(Δ[i2])
     end
 else
