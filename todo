@@ -1,3 +1,0 @@
-
-Test MC with delta = 0 for ebpf, eapf, normal bpf and normal apf for N in [10, 1000]. Should the error become the same when N is large?
-

@@ -129,3 +129,39 @@ function apf(y, sys, par)
 
     return X, W
 end
+
+function kalman_filter(y, sys)
+
+    # Extract parameters
+    A = sys.A
+    C = sys.C
+    Q = sys.Q
+    R = sys.R
+
+    T = sys.T
+    
+    nx = size(A, 1)
+    ny = size(C, 1)
+
+    xp = zeros(nx, 1)
+    Pp = zeros(nx, nx)
+
+    x = zeros(nx, T)
+    P = zeros(nx, nx, T)
+    P[:,:,1] = eye(nx)
+
+    for k = 2:T
+        xp = A*x[:, k-1]
+        Pp = A*P[:, :, k-1]*A' + Q
+
+        e = y[:, k] - C*xp
+        S = R + C*Pp*C'
+        K = Pp*C'*inv(S)
+        x[:, k] = xp + K*e
+        P[:,:,k] = (eye(nx) - K*C)*Pp*(eye(nx) - K*C)' + K*R*K'
+    end
+
+    return x, P
+
+end
+

@@ -92,6 +92,162 @@ function ebpf(y, sys, par, δ)
     return X, W, xh, yh, Z, Γ
 end
 
+function esis(y, sys, par, δ)
+    """
+    Event-based sisr
+    """
+
+    # Extract parameters
+    A = sys.A
+    C = sys.C
+    Q = sys.Q
+    R = sys.R
+
+    T = sys.T
+    N = par.N
+
+    # === For approximating the uniform distribution
+    # number of approximation points and their spacing
+    M = 20 #ceil(2 * δ) + 1
+    L = 2*δ / (M-1)
+
+    Vn = L / sqrt(2)
+    # ===
+
+    nx = size(A, 1)
+    ny = size(C, 1)
+
+    X = zeros(N, nx, T)
+    W = zeros(N, T)
+    V = zeros(N, T)
+
+    xh = zeros(nx, T)
+    yh = zeros(ny, T)
+    Z = zeros(ny, T)
+    Γ = zeros(T)
+
+    X[:, :, 1] = rand(Normal(0, 1), N, nx)
+    W[:, 1] = 1/N .* ones(N, 1)
+
+    idx = collect(1:N)
+
+    q_list = Array{Distribution}(N)
+
+    Xr = X[:, :, 1]
+    yh = zeros(M)
+
+    for k = 2:T
+
+        # Run event kernel, SOD
+        if norm(Z[:, k-1] - y[:, k]) >= δ
+            Γ[k] = 1
+            Z[:, k] = y[:, k]
+        else
+            Γ[k] = 0
+            Z[:, k] = Z[:, k-1]
+
+            # Discretisize the uniform distribution, currently only supports
+            # dim(y) = 1
+            yh = vcat(linspace(Z[:, k]- δ, Z[:, k] + δ, M)...)
+        end
+
+        # Resample using systematic resampling
+        idx = collect(1:N)
+        wc = cumsum(W[:, k-1])
+        u = (([0:(N-1)] + rand()) / N)[1]
+        c = 1
+        for i = 1:N
+            while wc[c] < u[i]
+                c = c + 1
+            end
+            idx[i] = c
+        end
+
+        # Resample
+        for i = 1:N
+            Xr[i, :] = X[idx[i], :, k-1]
+        end
+
+        # Propagate
+        if Γ[k] == 1
+            for i = 1:N
+                S = (inv(Q) + C'*inv(R)*C) \ eye(Q)
+
+                μ = S*(inv(Q)*A*Xr[i, :] + C'*inv(R)*Z[:, k])
+                Σ = S
+
+                Σ = fix_sym(Σ)
+
+                q_list[i] = MvNormal(μ, Σ)
+                X[i, :, k] = rand(q_list[i])
+            end
+        else
+            for i = 1:par.N
+                S = (inv(Q) + C'*inv(R + Vn)*C) \ eye(Q)
+
+                μ_func(yh) = S * (inv(Q)*A*Xr[i, :] + C'*inv(R + Vn)*yh)
+                Σ = S
+
+                Σ = fix_sym(Σ)
+
+                wh = zeros(M)
+                for j = 1:M
+                    wh[j] = pdf(MvNormal(C*A*Xr[i, :], C*Q*C' + R + Vn), yh[j, :])
+                end
+
+                if sum(wh) > 0
+                    wh = wh ./ sum(wh)
+                else
+                    println("Bad conditioned weights for Mixture Gaussian; resetting to uniform")
+                    wh = 1 / M * ones(M)
+                end
+
+                MD = MixtureModel(map(y -> MvNormal([μ_func(y)...], Σ), yh), wh)
+
+                q_list[i] = MD
+                X[i, :, k] = rand(q_list[i])
+            end
+        end
+
+        # Weight
+        if Γ[k] == 1
+            for i = 1:par.N
+                W[i, k] = pdf(MvNormal(C*X[i, :, k], R), Z[:,k]) *
+                          pdf(MvNormal(A*Xr[i, :], Q), X[i, :, k]) /
+                          (pdf(q_list[i], X[i, :, k]))
+            end
+        else
+            for i = 1:par.N
+                # Likelihood
+                D = Normal((C*X[i, :, k])[1], R[1])
+                g = cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ)
+
+                # Propagation
+                f = pdf(MvNormal(A*Xr[i, :], Q), X[i, :, k])
+
+                # proposal distribution
+                q = pdf(q_list[i], X[i, :, k])
+
+                W[i, k] = g*f / q
+
+            end
+        end
+
+
+        if sum(W[:, k]) > 0
+            W[:, k] = W[:, k] ./ sum(W[:, k])
+        else
+            println("Bad conditioned weights for ESIS! Resetting to uniform")
+            W[:, k] = 1/par.N * ones(par.N, 1)
+        end
+
+
+    end
+
+    return X, W, xh, yh, Z, Γ
+end
+
+
 function eapf(y, sys, par, δ)
     """
     Event-based auxiliary particle filter
@@ -282,4 +438,87 @@ function eapf(y, sys, par, δ)
     end
 
     return X, W, xh, yh, Z, Γ
+end
+
+"""
+Event-based state estimator
+"""
+function ebse(y, sys, δ)
+
+    # Extract parameters
+    A = sys.A
+    C = sys.C
+    Q = sys.Q
+    R = sys.R
+
+    T = sys.T
+    
+    # === For approximating the uniform distribution
+    # number of approximation points and their spacing
+    M = 20 #ceil(2 * δ) + 1
+    L = 2*δ / (M-1)
+
+    Vn = L / sqrt(2)
+    # ===
+
+    nx = size(A, 1)
+    ny = size(C, 1)
+
+    xp = zeros(nx, T)
+    Pp = zeros(nx, nx, T)
+    yp = zeros(ny, T)
+    Z = zeros(ny, T)
+    Γ = zeros(T)
+
+    x = zeros(nx, T)
+    P = zeros(nx, nx, T)
+
+    P[:,:,1] = eye(nx)
+
+    for k = 2:T
+
+        # Run event kernel, SOD
+        if norm(Z[:, k-1] - y[:, k]) >= δ
+            Γ[k] = 1
+            Z[:, k] = y[:, k]
+        else
+            Γ[k] = 0
+            Z[:, k] = Z[:, k-1]
+
+            # Discretisize the uniform distribution, currently only supports
+            # dim(y) = 1
+            yh = vcat(linspace(Z[:, k]- δ, Z[:, k] + δ, M)...)
+        end
+
+        # Predict
+        xp = A*x[:, k-1]
+        Pp = A*P[:, :, k-1]*A' + Q
+    
+        # Update
+        S = inv(inv(Pp) + C'*inv(R)*C)
+        
+        if Γ[k] == 1
+            x[:, k] = S*(inv(Pp)*xp + C'*inv(R)*Z[:, k])
+            P[:, :, k] = S
+        else
+            θ = zeros(2, M)
+            w = zeros(1, M)
+            for i = 1:M
+                θ[:, i] = S*(inv(Pp)*xp + C'*inv(R)*yh[i])
+                w[:, i] = pdf(MvNormal(C*xp, C*Pp*C' + R + Vn), yh[i, :])
+            end
+            w /= sum(w)
+
+            for i = 1:M
+                x[:, k] += w[:, i] .* θ[:, i] 
+            end
+
+            for i = 1:M
+                P[:, :, k] += w[:, i] .* (S + (x[:, k] - θ[:, i])*(x[:, k] - θ[:, i])')
+            end
+        end
+    end
+
+    return x, P, Z, Γ
+
 end
