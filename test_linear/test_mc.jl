@@ -14,7 +14,7 @@ using Distributions
 W = 23
 #hosts =  vcat([(@sprintf("philon-%2.2d", i), W) for i in 1:12],
 #      [(@sprintf("heron-%2.2d", i), W) for i in 1:12])
-hosts = [(@sprintf("cloud-%2.2d", i), W) for i in 4:7]
+hosts = [(@sprintf("cloud-%2.2d", i), W) for i in 1:7]
 if nprocs() == 1
     #@show addprocs([("heron-01", W)], topology=:master_slave,
     #        exeflags="--compilecache=no", tunnel=true)
@@ -69,39 +69,55 @@ fetch(f)
         par = pf_params(N)
 
         # Eventbased implementations
-        #X_ebpf, W_ebpf, xh_ebpf, yh_ebpf, Z_ebpf, Γ_ebpf = ebpf(y, sys, par, δ)
-        X_esis, W_esis, xh_esis, yh_esis, Z_esis, Γ_esis = esis(y, sys, par, δ)
-        #X_eapf, W_eapf, xh_eapf, yh_eapf, Z_eapf, Γ_eapf = eapf(y, sys, par, δ)
+        X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, fail_ebpf = ebpf(y, sys, par, δ)
+        X_esis, W_esis, Z_esis, Γ_esis, Neff_esis, fail_esis = esis(y, sys, par, δ)
+        X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, fail_eapf = eapf(y, sys, par, δ)
 
-
-        # Normal implementations
-        #X_bpf, W_bpf = bpf(y, sys, par)
-        #X_apf, W_apf = apf(y, sys, par)
-
-        #xh_ebpf = zeros(nx, T)
-        xh_esis = zeros(nx, T)
-        #xh_eapf = zeros(nx, T)
-
-        #xh_bpf = zeros(nx, T)
-        #xh_apf = zeros(nx, T)
-        for k = 1:nx
-            #xh_ebpf[k, :] = sum(diag(W_ebpf'*X_ebpf[:, k, :]), 2)
-            xh_esis[k, :] = sum(diag(W_esis'*X_esis[:, k, :]), 2)
-            #xh_eapf[k, :] = sum(diag(W_eapf'*X_eapf[:, k, :]), 2)
-
-            #xh_bpf[k, :] = sum(diag(W_bpf'*X_bpf[:, k, :]), 2)
-            #xh_apf[k, :] = sum(diag(W_apf'*X_apf[:, k, :]), 2)
+        if idx[1] == 1 && idx[2] == 1
+            xh_kal, P_kal = kalman_filter(y, sys)
+            err_kal = x - xh_kal
+        else
+            err_kal = [-1.0]
         end
 
-        #err_ebpf = x - xh_ebpf
+        if idx[1] == 1
+            xh_ebse, P_ebse, Z_ebse, Γ_ebse = ebse(y, sys, δ)
+            err_ebse = x - xh_ebse
+        else
+            err_ebse = [-1.0]
+            Γ_ebse = [-1.0]
+        end
+
+        xh_ebpf = zeros(nx, T)
+        xh_esis = zeros(nx, T)
+        xh_eapf = zeros(nx, T)
+
+        for k = 1:nx
+            xh_ebpf[k, :] = sum(diag(W_ebpf'*X_ebpf[:, k, :]), 2)
+            xh_esis[k, :] = sum(diag(W_esis'*X_esis[:, k, :]), 2)
+            xh_eapf[k, :] = sum(diag(W_eapf'*X_eapf[:, k, :]), 2)
+        end
+
+        err_ebpf = x - xh_ebpf
         err_esis = x - xh_esis
-        #err_eapf = x - xh_eapf
-        #err_bpf = x - xh_bpf
-        #err_apf = x - xh_apf
+        err_eapf = x - xh_eapf
 
         return Dict{String,Array{Float64}}(
+                    "Neff_ebpf" => Neff_ebpf,
+                    "Neff_esis" => Neff_esis,
+                    "Neff_eapf" => Neff_eapf,
+                    "fail_ebpf" => fail_ebpf,
+                    "fail_esis" => fail_esis,
+                    "fail_eapf" => fail_eapf,
+                    "err_ebpf" => err_ebpf,
                     "err_esis" => err_esis,
-                    "trig_esis" => Γ_esis)
+                    "err_eapf" => err_eapf,
+                    "err_ebse" => err_ebse,
+                    "trig_ebpf" => Γ_ebpf,
+                    "trig_esis" => Γ_esis,
+                    "trig_eapf" => Γ_eapf,
+                    "trig_ebse" => Γ_ebse,
+                    "err_kal" => err_kal)
     end
 end
 
@@ -117,7 +133,7 @@ sims = 1000
 #sims = 100
 
 path = "/home/johanr/projects/EBPF/test_linear/data"
-folder = "/test_linear_system_esis"
+folder = "/test_linear_system_run2"
 
 if !isdir(path*folder)
         mkdir(path*folder)

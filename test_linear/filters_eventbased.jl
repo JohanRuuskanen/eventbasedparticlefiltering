@@ -21,13 +21,15 @@ function ebpf(y, sys, par, δ)
     X = zeros(N, nx, T)
     W = zeros(N, T)
 
-    xh = zeros(nx, T)
-    yh = zeros(ny, T)
     Z = zeros(ny, T)
     Γ = zeros(T)
 
+    Neff = zeros(T)
+    fail = zeros(T)
+
     X[:, :, 1] = rand(Normal(0, 1), N, nx)
     W[:, 1] = 1/N .* ones(N, 1)
+    Neff[1] = 1/sum(W[:, 1].^2)
 
     idx = collect(1:N)
     Xr = X[:, :, 1]
@@ -81,15 +83,18 @@ function ebpf(y, sys, par, δ)
 
         if sum(W[:, k]) > 0
             W[:, k] = W[:, k] ./ sum(W[:, k])
+            Neff[k] = 1/sum(W[:, k].^2)
         else
             println("Bad conditioned weights for EBPF! Resetting to uniform")
+            fail[k] = 1
             W[:, k] = 1/N * ones(N, 1)
+            Neff[k] = 0
         end
 
 
     end
 
-    return X, W, xh, yh, Z, Γ
+    return X, W, Z, Γ, Neff, fail
 end
 
 function esis(y, sys, par, δ)
@@ -119,15 +124,17 @@ function esis(y, sys, par, δ)
 
     X = zeros(N, nx, T)
     W = zeros(N, T)
-    V = zeros(N, T)
 
-    xh = zeros(nx, T)
-    yh = zeros(ny, T)
     Z = zeros(ny, T)
     Γ = zeros(T)
 
+    Neff = zeros(T)
+    fail = zeros(T)
+
+
     X[:, :, 1] = rand(Normal(0, 1), N, nx)
     W[:, 1] = 1/N .* ones(N, 1)
+    Neff[1] = 1 / sum(W[:, 1].^2)
 
     idx = collect(1:N)
 
@@ -236,15 +243,18 @@ function esis(y, sys, par, δ)
 
         if sum(W[:, k]) > 0
             W[:, k] = W[:, k] ./ sum(W[:, k])
+            Neff[k] = 1/sum(W[:, k].^2)
         else
             println("Bad conditioned weights for ESIS! Resetting to uniform")
             W[:, k] = 1/par.N * ones(par.N, 1)
+            fail[k] = 1
+            Neff[k] = 0
         end
 
 
     end
 
-    return X, W, xh, yh, Z, Γ
+    return X, W, Z, Γ, Neff, fail
 end
 
 
@@ -277,14 +287,16 @@ function eapf(y, sys, par, δ)
     W = zeros(N, T)
     V = zeros(N, T)
 
-    xh = zeros(nx, T)
-    yh = zeros(ny, T)
     Z = zeros(ny, T)
     Γ = zeros(T)
+
+    Neff = zeros(T)
+    fail = zeros(T)
 
     X[:, :, 1] = rand(Normal(0, 1), N, nx)
     W[:, 1] = 1/N .* ones(N, 1)
     V[:, 1] = 1/N .* ones(N, 1)
+    Neff[1] = 1/sum(V[:, 1].^2)
 
     idx = collect(1:N)
 
@@ -334,8 +346,9 @@ function eapf(y, sys, par, δ)
 
             end
         end
-	V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
+	    V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
 
+        Neff[k] = 1/sum(V[:, k-1].^2)
 
         # Resample using systematic resampling
         idx = collect(1:N)
@@ -432,12 +445,13 @@ function eapf(y, sys, par, δ)
         else
             println("Bad conditioned weights for EAPF! Resetting to uniform")
             W[:, k] = 1/par.N * ones(par.N, 1)
+            fail[k] = 1
         end
 
 
     end
 
-    return X, W, xh, yh, Z, Γ
+    return X, W, Z, Γ, Neff, fail
 end
 
 """
@@ -452,7 +466,7 @@ function ebse(y, sys, δ)
     R = sys.R
 
     T = sys.T
-    
+
     # === For approximating the uniform distribution
     # number of approximation points and their spacing
     M = 20 #ceil(2 * δ) + 1
@@ -493,10 +507,10 @@ function ebse(y, sys, δ)
         # Predict
         xp = A*x[:, k-1]
         Pp = A*P[:, :, k-1]*A' + Q
-    
+
         # Update
         S = inv(inv(Pp) + C'*inv(R)*C)
-        
+
         if Γ[k] == 1
             x[:, k] = S*(inv(Pp)*xp + C'*inv(R)*Z[:, k])
             P[:, :, k] = S
@@ -510,7 +524,7 @@ function ebse(y, sys, δ)
             w /= sum(w)
 
             for i = 1:M
-                x[:, k] += w[:, i] .* θ[:, i] 
+                x[:, k] += w[:, i] .* θ[:, i]
             end
 
             for i = 1:M

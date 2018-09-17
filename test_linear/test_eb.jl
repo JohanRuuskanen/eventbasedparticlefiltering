@@ -4,11 +4,13 @@ using StatsBase
 using Distributions
 
 include("../src/misc.jl")
-include("filters.jl")
+#include("../src/event_kernels.jl")
+
+#include("filters.jl")
 include("filters_eventbased.jl")
 
 # Parameters
-N = 50
+N = 100
 T = 1000
 δ = 4
 
@@ -32,12 +34,9 @@ ny = size(C, 1)
 # For estimation
 par = pf_params(N)
 
-X_ebpf, W_ebpf, xh_ebpf, yh_ebpf, Z_ebpf, Γ_ebpf = ebpf(y, sys, par, δ)
-X_esis, W_esis, xh_esis, yh_esis, Z_esis, Γ_esis = esis(y, sys, par, δ)
-X_eapf, W_eapf, xh_eapf, yh_eapf, Z_eapf, Γ_eapf = eapf(y, sys, par, δ)
-
-xh_ebse, P_ebse, Z_ebse, Γ_ebse = ebse(y, sys, δ)
-xh_kal, P_kal = kalman_filter(y, sys)
+X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, fail_ebpf = ebpf(y, sys, par, δ)
+X_esis, W_esis, Z_esis, Γ_esis, Neff_esis, fail_esis = esis(y, sys, par, δ)
+X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, fail_eapf = eapf(y, sys, par, δ)
 
 xh_ebpf = zeros(nx, T)
 xh_esis = zeros(nx, T)
@@ -51,8 +50,6 @@ end
 err_ebpf = x - xh_ebpf
 err_esis = x - xh_esis
 err_eapf = x - xh_eapf
-err_ebse = x - xh_ebse
-err_kal = x - xh_kal
 
 println("")
 println("Total error")
@@ -64,12 +61,6 @@ println("ESIS x2: $(mean(err_esis[2, :].^2))")
 println("")
 println("EAPF x1: $(mean(err_eapf[1, :].^2))")
 println("EAPF x2: $(mean(err_eapf[2, :].^2))")
-println("")
-println("EBSE x1: $(mean(err_ebse[1, :].^2))")
-println("EBSE x2: $(mean(err_ebse[2, :].^2))")
-println("")
-println("Kal x1: $(mean(err_kal[1, :].^2))")
-println("Kal x2: $(mean(err_kal[2, :].^2))")
 
 
 figure(1)
@@ -79,21 +70,34 @@ plot(y')
 plot(Z_ebpf')
 plot(Z_esis')
 plot(Z_eapf')
-plot(Z_ebse')
-legend(["y", "z BPF", "z SIS", "z APF", "z EBSE"])
+legend(["y", "z BPF", "z SIS", "z APF"])
 subplot(3, 1, 2)
 plot(x[1, :])
 plot(xh_ebpf[1, :])
 plot(xh_esis[1, :])
 plot(xh_eapf[1, :])
-plot(xh_ebse[1, :])
-plot(xh_kal[1, :])
-legend(["True", "EBPF", "ESIS", "EAPF", "EBSE", "kal"])
+legend(["True", "EBPF", "ESIS", "EAPF"])
 subplot(3, 1, 3)
 plot(x[2, :])
 plot(xh_ebpf[2, :])
 plot(xh_esis[2, :])
 plot(xh_eapf[2, :])
-plot(xh_ebse[2, :])
-plot(xh_kal[2, :])
-legend(["True", "EBPF", "ESIS", "EAPF", "EBSE", "kal"])
+legend(["True", "EBPF", "ESIS", "EAPF"])
+
+idx_ebpf = find(x -> x == 1, Γ_ebpf)
+idx_esis = find(x -> x == 1, Γ_esis)
+idx_eapf = find(x -> x == 1, Γ_eapf)
+figure(2)
+clf()
+subplot(3, 1, 1)
+plot(1:T, Neff_ebpf)
+plot(1:T, Neff_esis)
+plot(1:T, Neff_eapf)
+subplot(3, 1, 2)
+plot(idx_ebpf, Neff_ebpf[idx_ebpf], "x-")
+plot(idx_esis, Neff_esis[idx_esis], "x-")
+plot(idx_eapf, Neff_eapf[idx_eapf], "x-")
+subplot(3, 1, 3)
+plot(1:T, fail_ebpf, "o")
+plot(1:T, fail_esis, "o")
+plot(1:T, fail_eapf, "o")

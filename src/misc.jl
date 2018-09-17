@@ -24,8 +24,8 @@ function sim_sys(sys)
     y = zeros(sys.nd[2], sys.T)
 
     for k = 2:sys.T
-        x[:, k] = rand(sys.f(x[:, k-1], k))
-        y[:, k] = rand(sys.h(x[:, k], k))
+        x[:, k] = sys.f(x[:, k-1], k) 
+        y[:, k] = sys.h(x[:, k], k)
     end
 
     return x, y
