@@ -2,6 +2,8 @@
 struct sys_params
     f::Function
     h::Function
+    Q::Array{Float64}
+    R::Array{Float64}
     T::Int64
     nd::Array{Int64}
 end
@@ -24,8 +26,8 @@ function sim_sys(sys)
     y = zeros(sys.nd[2], sys.T)
 
     for k = 2:sys.T
-        x[:, k] = sys.f(x[:, k-1], k) 
-        y[:, k] = sys.h(x[:, k], k)
+        x[:, k] = rand(sys.f(x[:, k-1], k))
+        y[:, k] = rand(sys.h(x[:, k], k))
     end
 
     return x, y

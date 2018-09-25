@@ -162,6 +162,42 @@ function kalman_filter(y, sys)
     end
 
     return x, P
+end
 
+function FFBSi(X, W, sys, M)
+    
+    # Extract parameters
+    A = sys.A
+    C = sys.C
+    Q = sys.Q
+    R = sys.R
+
+    T = sys.T
+    N = size(W, 1)
+
+    nx = size(sys.A, 1)
+    ny = size(sys.C, 1)
+
+    Bs = zeros(Int64, M, T)
+    Xs = zeros(M, size(X, 2), T)
+
+    Bs[:, T] = rand(Categorical(W[:, T]), M)
+    Xs[:, :, T] = X[Bs[:, T], :, T]
+
+    for t = (T-1):-1:1
+        println(t)
+        for j = 1:M
+            w = zeros(N)
+            for i = 1:N
+                w[i] = W[i, t] .* pdf(MvNormal(A*X[i, :, t]), Xs[j, :, t+1])
+            end
+            w /= sum(w)
+
+            Bs[j, t] = rand(Categorical(w))
+            Xs[j, :, t] = X[Bs[j, t], :, t]
+        end
+    end
+    
+    return Xs
 end
 

@@ -7,8 +7,7 @@ b = 2
 
 U = Uniform(a, b)
 
-N = 10
-
+N = 20
 
 L = (b - a) / (N-1)
 
@@ -22,4 +21,5 @@ x = linspace(1.5*a, 1.5*b, 10000)
 figure(1)
 clf()
 plot(x, pdf.(U, x))
-plot(x, pdf.(MD, x))
+plot(x, pdf.(MD, x), "--")
+legend(["Uniform", "Gaussian mix"])

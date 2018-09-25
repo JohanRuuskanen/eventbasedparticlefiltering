@@ -18,7 +18,8 @@ hosts = [(@sprintf("cloud-%2.2d", i), W) for i in 1:7]
 if nprocs() == 1
     #@show addprocs([("heron-01", W)], topology=:master_slave,
     #        exeflags="--compilecache=no", tunnel=true)
-    @show addprocs(hosts, topology=:master_slave, exeflags="--compilecache=no", tunnel=true)
+    @show addprocs(hosts, topology=:master_slave, exeflags="--compilecache=no",
+        tunnel=true, dir="/var/tmp/johanr")
 end
 
 function sinclude(path)
@@ -152,3 +153,4 @@ for n = 1:length(N)
     end
 end
 println("Monte-Carlo simulation complete!")
+:wq
