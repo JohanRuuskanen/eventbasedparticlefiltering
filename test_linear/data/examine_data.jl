@@ -3,7 +3,7 @@ ENV["JULIA_PKGDIR"] = "/home/johanr/.julia"
 using JLD
 using PyPlot
 
-read_new = false
+read_new = true
 
 N = [10 25 50 75 100 150 200 250 300 350 400 500]
 Δ = [0 0.4 0.8 1.2 1.6 2.0 2.4 2.8 3.2 3.6 4.0]
@@ -55,7 +55,7 @@ if read_new
                 "ebpf_g1" => 0,
                 "eapf_g1" => 0,
                 "ebse_g1" => 0,
-                "kalman" => 0,
+                "kalman" => 0
             )
 
             for i3 = 1:k
@@ -65,7 +65,7 @@ if read_new
                 Γ_bpf = E[i3]["trig_ebpf"]
                 Γ_apf = E[i3]["trig_eapf"]
 
-                if 2*length(bpf_measure) - length(sis_measure) - length(apf_measure) == 0
+                if length(bpf_measure) - length(apf_measure) == 0
                     T = size(bpf_measure, 2)
                 else
                     println("Warning: lengths not equal!")
@@ -77,7 +77,7 @@ if read_new
                 Err_bpf["mean"][i1, i2, :], counters["ebpf"] =
                     calc_recursive(Err_bpf["mean"][i1, i2, :], counters["ebpf"],
                                     bpf_measure.^2)
-                Err_apf["mean"][i1, i2, :], , counters["eapf"] =
+                Err_apf["mean"][i1, i2, :], counters["eapf"] =
                     calc_recursive(Err_apf["mean"][i1, i2, :], counters["eapf"],
                                     apf_measure.^2)
 
