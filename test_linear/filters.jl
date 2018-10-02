@@ -20,39 +20,48 @@ function bpf(y, sys, par)
     idx = collect(1:par.N)
     Xr = X[:, :, 1]
 
+    N_T = par.N / 2
+    N_eff = zeros(T)
+
     for k = 2:sys.T
 
-        # Resample using systematic resampling
-        idx = collect(1:par.N)
-        wc = cumsum(W[:, k-1])
-        u = (([0:(par.N-1)] + rand()) / par.N)[1]
-        c = 1
-        for i = 1:par.N
-            while wc[c] < u[i]
-                c = c + 1
+        N_eff[k-1] = 1/(sum(W[:, k-1].^2))
+        println(N_eff[k-1])
+        if N_eff[k-1] < N_T
+            # Resample using systematic resampling
+            idx = collect(1:par.N)
+            wc = cumsum(W[:, k-1])
+            u = (([0:(par.N-1)] + rand()) / par.N)[1]
+            c = 1
+            for i = 1:par.N
+                while wc[c] < u[i]
+                    c = c + 1
+                end
+                idx[i] = c
             end
-            idx[i] = c
-        end
 
-        # Resample
-        for i = 1:par.N
-            Xr[i, :] = X[idx[i], :, k-1]
+            for i = 1:par.N
+                Xr[i, :] = X[idx[i], :, k-1]
+            end
+
+            X[:, :, k-1] = Xr
+            W[:, k-1] = 1/par.N .* ones(par.N, 1)
         end
 
         # Propagate
         for i = 1:par.N
-            X[i, :, k] = sys.A * Xr[i, :] + rand(MvNormal(zeros(nx), sys.Q))
+            X[i, :, k] = sys.A * X[i, :, k-1] + rand(MvNormal(zeros(nx), sys.Q))
         end
 
         # Weight
         for i = 1:par.N
-            W[i, k] = pdf(MvNormal(sys.C * X[i, :, k], sys.R), y[:, k])
+            W[i, k] = pdf(MvNormal(sys.C * X[i, :, k], sys.R), y[:, k]) * W[i, k-1]
         end
         W[:, k] = W[:, k] ./ sum(W[:, k])
 
     end
 
-    return X, W
+    return X, W, N_eff
 end
 
 function apf(y, sys, par)
@@ -77,34 +86,50 @@ function apf(y, sys, par)
 	q_aux_list = Array{Distribution}(par.N)
 
 	Xr = X[:, :, 1]
+    N_T = par.N / 2
+    N_eff = zeros(T)
+
+    resample = false
 
     for k = 2:sys.T
 
-		# Calculate the auxiliary weights
-	for i = 1:par.N
-            μ = sys.C * sys.A * X[i, :, k-1]
-            Σ = sys.C * sys.Q * sys.C' + sys.R
-	    q_aux_list[i] = MvNormal(μ, Σ)
-	    V[i, k-1] = W[i, k-1] * pdf(q_aux_list[i], y[:,k])
-	end
-	V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
+        # Calculate the auxiliary weights
+    	for i = 1:par.N
+                μ = sys.C * sys.A * X[i, :, k-1]
+                Σ = sys.C * sys.Q * sys.C' + sys.R
+    	    q_aux_list[i] = MvNormal(μ, Σ)
+    	    V[i, k-1] = W[i, k-1] * pdf(q_aux_list[i], y[:,k])
+    	end
+    	V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
 
-        # Resample using systematic resampling
-        #idx = rand(Categorical(W[:, k-1]), N)
-        wc = cumsum(V[:, k-1])
-        u = (([0:(par.N-1)] + rand()) / par.N)[1]
-        c = 1
-        for i = 1:par.N
-            while wc[c] < u[i]
-                c = c + 1
+        N_eff[k-1] = 1./(sum(V[:, k-1].^2))
+        println(N_eff[k-1])
+
+        if N_eff[k-1] < N_T
+            # Resample using systematic resampling
+            wc = cumsum(V[:, k-1])
+            u = (([0:(par.N-1)] + rand()) / par.N)[1]
+            c = 1
+            for i = 1:par.N
+                while wc[c] < u[i]
+                    c = c + 1
+                end
+                idx[i] = c
             end
-            idx[i] = c
+
+            for i = 1:par.N
+                Xr[i, :] = X[idx[i], :, k-1]
+            end
+    	    q_aux_list = q_aux_list[idx]
+            W[:, k-1] = 1/par.N .* ones(par.N, 1)
+            resample = true
+        else
+            for i = 1:par.N
+                Xr[i, :] = X[i, :, k-1]
+            end
+            resample = false
         end
 
-        for i = 1:par.N
-            Xr[i, :] = X[idx[i], :, k-1]
-        end
-	q_aux_list = q_aux_list[idx]
 
         # Propagate
         for i = 1:par.N
@@ -119,15 +144,21 @@ function apf(y, sys, par)
 
         # Weight
         for i = 1:par.N
-            W[i, k] = 	pdf(MvNormal(sys.C*X[i, :, k], sys.R), y[:, k]) *
-			pdf(MvNormal(sys.A*Xr[i, :], sys.Q), X[i, :, k]) /
-                        (pdf(q_list[i], X[i, :, k]) * pdf(q_aux_list[i], y[:, k]))
+            if resample == true
+                W[i, k] =  pdf(MvNormal(sys.C*X[i, :, k], sys.R), y[:, k]) *
+    			             pdf(MvNormal(sys.A*Xr[i, :], sys.Q), X[i, :, k]) /
+                            (pdf(q_list[i], X[i, :, k]) * pdf(q_aux_list[i], y[:, k]))
+            elseif resample == false
+                W[i, k] =  W[i, k-1] * pdf(MvNormal(sys.C*X[i, :, k], sys.R), y[:, k]) *
+    			             pdf(MvNormal(sys.A*Xr[i, :], sys.Q), X[i, :, k]) /
+                            (pdf(q_list[i], X[i, :, k]))
+            end
         end
         W[:, k] = W[:, k] ./ sum(W[:, k])
 
     end
 
-    return X, W
+    return X, W, N_eff
 end
 
 function kalman_filter(y, sys)
@@ -139,7 +170,7 @@ function kalman_filter(y, sys)
     R = sys.R
 
     T = sys.T
-    
+
     nx = size(A, 1)
     ny = size(C, 1)
 
@@ -165,7 +196,7 @@ function kalman_filter(y, sys)
 end
 
 function FFBSi(X, W, sys, M)
-    
+
     # Extract parameters
     A = sys.A
     C = sys.C
@@ -197,7 +228,6 @@ function FFBSi(X, W, sys, M)
             Xs[j, :, t] = X[Bs[j, t], :, t]
         end
     end
-    
+
     return Xs
 end
-

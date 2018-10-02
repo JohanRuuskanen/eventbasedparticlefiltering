@@ -70,9 +70,8 @@ fetch(f)
         par = pf_params(N)
 
         # Eventbased implementations
-        X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, fail_ebpf = ebpf(y, sys, par, δ)
-        X_esis, W_esis, Z_esis, Γ_esis, Neff_esis, fail_esis = esis(y, sys, par, δ)
-        X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, fail_eapf = eapf(y, sys, par, δ)
+        X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, fail_ebpf, res_ebpf = ebpf(y, sys, par, δ)
+        X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, fail_eapf, res_ebpf = eapf(y, sys, par, δ)
 
         if idx[1] == 1 && idx[2] == 1
             xh_kal, P_kal = kalman_filter(y, sys)
@@ -90,32 +89,27 @@ fetch(f)
         end
 
         xh_ebpf = zeros(nx, T)
-        xh_esis = zeros(nx, T)
         xh_eapf = zeros(nx, T)
 
         for k = 1:nx
             xh_ebpf[k, :] = sum(diag(W_ebpf'*X_ebpf[:, k, :]), 2)
-            xh_esis[k, :] = sum(diag(W_esis'*X_esis[:, k, :]), 2)
             xh_eapf[k, :] = sum(diag(W_eapf'*X_eapf[:, k, :]), 2)
         end
 
         err_ebpf = x - xh_ebpf
-        err_esis = x - xh_esis
         err_eapf = x - xh_eapf
 
         return Dict{String,Array{Float64}}(
                     "Neff_ebpf" => Neff_ebpf,
-                    "Neff_esis" => Neff_esis,
                     "Neff_eapf" => Neff_eapf,
-                    "fail_ebpf" => fail_ebpf,
-                    "fail_esis" => fail_esis,
-                    "fail_eapf" => fail_eapf,
+                    "fail_ebpf" => sum(fail_ebpf),
+                    "fail_eapf" => sum(fail_eapf),
+                    "res_ebpf" => sum(res_ebpf),
+                    "res_eapf" => sum(res_eapf),
                     "err_ebpf" => err_ebpf,
-                    "err_esis" => err_esis,
                     "err_eapf" => err_eapf,
                     "err_ebse" => err_ebse,
                     "trig_ebpf" => Γ_ebpf,
-                    "trig_esis" => Γ_esis,
                     "trig_eapf" => Γ_eapf,
                     "trig_ebse" => Γ_ebse,
                     "err_kal" => err_kal)
@@ -134,7 +128,7 @@ sims = 1000
 #sims = 100
 
 path = "/home/johanr/projects/EBPF/test_linear/data"
-folder = "/test_linear_system_run2"
+folder = "/test_linear_system_run3"
 
 if !isdir(path*folder)
         mkdir(path*folder)
@@ -153,4 +147,3 @@ for n = 1:length(N)
     end
 end
 println("Monte-Carlo simulation complete!")
-:wq
