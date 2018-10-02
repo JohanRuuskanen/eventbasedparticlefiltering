@@ -9,13 +9,19 @@ T = 200
 
 N = 100
 
-Q = 1.0*eye(1)
-R = 1.0*eye(1)
+Q = 1.0
+R = 0.1
 
-f(x, k) = MvNormal(x/2 + 25*x./(1 + x.^2) + 8*cos(1*k), Q)
-h(x, k) = MvNormal(x.^2/20, R)
+w = Normal(0.0, 1)#Gumbel(0, 1)
+v = Normal(0.0, 0.1)
 
-sys = sys_params(f, h, Q, R, T, [1, 1])
+wh = Normal(mean(w), std(w)*sqrt(2))
+vh = Normal(mean(v), std(v)*sqrt(2))
+
+f(x, k) = x/2 + 25*x./(1 + x.^2) + 8*cos(1.2*k)
+h(x, k) = x.^2/20
+
+sys = sys_params(f, h, w, v, T, [1, 1])
 par = pf_params(N)
 
 x, y = sim_sys(sys)
@@ -34,3 +40,14 @@ subplot(2, 1, 2)
 plot(1:T, x')
 plot(1:T, xh1)
 plot(1:T, xh2)
+legend(["True", "BPF", "APF"])
+
+x = linspace(-10, 10, 1000)
+figure(2)
+clf()
+subplot(2, 1, 1)
+plot(x, pdf.(w, x))
+plot(x, pdf.(wh, x))
+subplot(2, 1, 2)
+plot(x, pdf.(v, x))
+plot(x, pdf.(vh, x))

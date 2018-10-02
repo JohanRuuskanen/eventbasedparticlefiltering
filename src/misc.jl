@@ -2,10 +2,10 @@
 struct sys_params
     f::Function
     h::Function
-    Q::Array{Float64}
-    R::Array{Float64}
-    T::Int64
-    nd::Array{Int64}
+    w
+    v
+    T
+    nd
 end
 
 struct lin_sys_params
@@ -26,8 +26,8 @@ function sim_sys(sys)
     y = zeros(sys.nd[2], sys.T)
 
     for k = 2:sys.T
-        x[:, k] = rand(sys.f(x[:, k-1], k))
-        y[:, k] = rand(sys.h(x[:, k], k))
+        x[:, k] = sys.f(x[:, k-1], k) + rand(sys.w)
+        y[:, k] = sys.h(x[:, k], k) + rand(sys.v)
     end
 
     return x, y

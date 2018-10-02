@@ -3,7 +3,7 @@ ENV["JULIA_PKGDIR"] = "/home/johanr/.julia"
 using JLD
 using PyPlot
 
-read_new = true
+read_new = false
 
 N = [10 25 50 75 100 150 200 250 300 350 400 500]
 Δ = [0 0.4 0.8 1.2 1.6 2.0 2.4 2.8 3.2 3.6 4.0]

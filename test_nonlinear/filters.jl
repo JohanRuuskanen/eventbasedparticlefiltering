@@ -45,14 +45,19 @@ function bpf(y, sys, N)
 
         # Propagate
         for i = 1:N
-            X[i, :, k] = rand(f(Xr[i, :], k), 1)
+            X[i, :, k] = f(Xr[i, :], k) + rand(sys.w)
         end
 
         # Weight
         for i = 1:N
-            W[i, k] = pdf(h(X[i, :, k], k), y[:, k])
+            W[i, k] = pdf.(sys.v, y[k] - h(X[i, :, k], k)[1])
         end
-        W[:, k] = W[:, k] ./ sum(W[:, k])
+        if sum(W[:, k]) > 0
+            W[:, k] = W[:, k] ./ sum(W[:, k])
+        else
+            println("Warning BPF: restting weights to uniform")
+            W[:, k] = 1/N .* ones(N, 1)
+        end
     end
 
     return X, W
@@ -66,8 +71,11 @@ function apf(y, sys, par)
     f = sys.f
     h = sys.h
 
-    Q = sys.Q
-    R = sys.R
+    Q = std(sys.w)
+    R = std(sys.v)
+
+    Qh = std(sys.w)*2
+    Rh = std(sys.v)*2
 
     nx = sys.nd[1]
     ny = sys.nd[2]
@@ -97,12 +105,21 @@ function apf(y, sys, par)
     	    q_aux_list[i] = MvNormal(reshape(μ, 1), Σ)
     	    V[i, k-1] = W[i, k-1] * pdf(q_aux_list[i], y[:,k])
     	end
+
+        for i = 1:par.N
+            Ck = (f(X[i, :, k-1], k))/10
+
+            μ = h(f(X[i, :, k-1], k), k)
+            Σ = Ck*Qh*Ck' + Rh
+    	    q_aux_list[i] = MvNormal(reshape(μ, 1), Σ)
+    	    V[i, k-1] = W[i, k-1] * pdf(q_aux_list[i], y[:,k])
+    	end
         """
         for i = 1:par.N
-            Ck = X[i, :, k-1]/10
+            p = f(X[i, :, k-1], k)
 
-            μ = mean(h(mean(f(X[i, :, k-1], k-1)), k))
-            Σ = Ck*Q*Ck' + R
+            μ = p.^2/20 + Q/20
+            Σ = p.^2*Q / 100 + Q^2/200 + R
     	    q_aux_list[i] = MvNormal(reshape(μ, 1), Σ)
     	    V[i, k-1] = W[i, k-1] * pdf(q_aux_list[i], y[:,k])
     	end
@@ -136,13 +153,25 @@ function apf(y, sys, par)
                                 Σ[1,1] - Σ[1,2]*inv(Σ[2,2])*Σ[1,2]')
             X[i, :, k] = rand(q_list[i])
         end
+
+        for i = 1:par.N
+            Ck = (f(Xr[i, :], k))/10
+
+            μ = [f(Xr[i, :], k), (f(Xr[i, :], k))/10]
+            Σ = [Qh Qh*Ck';
+                Ck*Qh (Ck*Qh*Ck' + Rh)]
+
+            q_list[i] = MvNormal(μ[1] + Σ[1,2]*inv(Σ[2,2])*(y[:,k]-μ[2]),
+                                Σ[1,1] - Σ[1,2]*inv(Σ[2,2])*Σ[1,2]')
+            X[i, :, k] = rand(q_list[i])
+        end
         """
         for i = 1:par.N
-            Ck = X[i, :, k-1]/10
+            p = f(Xr[i, :], k)
 
-            μ = [(mean(f(Xr[i, :], k-1)))[:], (mean(h(mean(f(Xr[i, :], k-1)), k)))[:]]
-            Σ = [Q[:] (Q*Ck')[:];
-                (Ck*Q)[:] (Ck*Q*Ck' + R)[:]]
+            μ = [p, p.^2/20 + Q/20]
+            Σ = [Q p*Q/10;
+                p*Q/10 p.^2*Q / 100 + Q^2/200 + R]
 
             q_list[i] = MvNormal(μ[1] + Σ[1,2]*inv(Σ[2,2])*(y[:,k]-μ[2]),
                                 Σ[1,1] - Σ[1,2]*inv(Σ[2,2])*Σ[1,2]')
@@ -151,11 +180,16 @@ function apf(y, sys, par)
 
         # Weight
         for i = 1:par.N
-            W[i, k] = 	pdf(h(X[i, :, k], k), y[:, k]) * pdf(f(Xr[i, :], k-1), X[i, :, k]) /
+            W[i, k] =   pdf.(sys.v, y[k] - h(X[i, :, k], k)[1]) *
+                        pdf.(sys.w, X[i, :, k][1] - f(Xr[i, :], k)[1]) /
                         (pdf(q_list[i], X[i, :, k]) * pdf(q_aux_list[i], y[:, k]))
         end
-        W[:, k] = W[:, k] ./ sum(W[:, k])
-
+        if sum(W[:, k]) > 0
+            W[:, k] = W[:, k] ./ sum(W[:, k])
+        else
+            println("Warning APF: restting weights to uniform")
+            W[:, k] = 1/N .* ones(N, 1)
+        end
     end
 
     return X, W
