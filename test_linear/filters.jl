@@ -40,11 +40,7 @@ function bpf(y, sys, par)
                 idx[i] = c
             end
 
-            for i = 1:par.N
-                Xr[i, :] = X[idx[i], :, k-1]
-            end
-
-            X[:, :, k-1] = Xr
+            X[:, :, k-1] = X[idx, :, k-1]
             W[:, k-1] = 1/par.N .* ones(par.N, 1)
         end
 
@@ -117,16 +113,11 @@ function apf(y, sys, par)
                 idx[i] = c
             end
 
-            for i = 1:par.N
-                Xr[i, :] = X[idx[i], :, k-1]
-            end
     	    q_aux_list = q_aux_list[idx]
+            X[:, :, k-1] = X[idx, :, k-1]
             W[:, k-1] = 1/par.N .* ones(par.N, 1)
             resample = true
         else
-            for i = 1:par.N
-                Xr[i, :] = X[i, :, k-1]
-            end
             resample = false
         end
 
@@ -135,7 +126,7 @@ function apf(y, sys, par)
         for i = 1:par.N
             S = sys.C * sys.Q * sys.C' + sys.R
 
-            μ = sys.A*Xr[i, :] + sys.Q*sys.C' * inv(S) * (y[k] - sys.C*sys.A*Xr[i, :])
+            μ = sys.A*X[i, :, k-1] + sys.Q*sys.C' * inv(S) * (y[k] - sys.C*sys.A*X[i, :, k-1])
             Σ = sys.Q - sys.Q*sys.C' * inv(S) * sys.C*sys.Q
 
             q_list[i] = MvNormal(μ, Σ)
@@ -146,11 +137,11 @@ function apf(y, sys, par)
         for i = 1:par.N
             if resample == true
                 W[i, k] =  pdf(MvNormal(sys.C*X[i, :, k], sys.R), y[:, k]) *
-    			             pdf(MvNormal(sys.A*Xr[i, :], sys.Q), X[i, :, k]) /
+    			             pdf(MvNormal(sys.A*X[i, :, k-1], sys.Q), X[i, :, k]) /
                             (pdf(q_list[i], X[i, :, k]) * pdf(q_aux_list[i], y[:, k]))
             elseif resample == false
                 W[i, k] =  W[i, k-1] * pdf(MvNormal(sys.C*X[i, :, k], sys.R), y[:, k]) *
-    			             pdf(MvNormal(sys.A*Xr[i, :], sys.Q), X[i, :, k]) /
+    			             pdf(MvNormal(sys.A*X[i, :, k-1], sys.Q), X[i, :, k]) /
                             (pdf(q_list[i], X[i, :, k]))
             end
         end

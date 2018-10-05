@@ -60,6 +60,7 @@ function ebpf(y, sys, par, δ)
                 end
                 idx[i] = c
             end
+
             W[:, k-1] = 1/N .* ones(N, 1)
             res[k] = 1
         else

@@ -14,7 +14,7 @@ using Distributions
 W = 23
 #hosts =  vcat([(@sprintf("philon-%2.2d", i), W) for i in 1:12],
 #      [(@sprintf("heron-%2.2d", i), W) for i in 1:12])
-hosts = [(@sprintf("cloud-%2.2d", i), W) for i in 1:7]
+hosts = [(@sprintf("cloud-%2.2d", i), W) for i in 3:6]
 if nprocs() == 1
     #@show addprocs([("heron-01", W)], topology=:master_slave,
     #        exeflags="--compilecache=no", tunnel=true)
@@ -39,7 +39,7 @@ sinclude("/home/johanr/projects/EBPF/test_linear/testinclude.jl")
 sinclude("/home/johanr/projects/EBPF/src/misc.jl")
 sinclude("/home/johanr/projects/EBPF/test_linear/filters.jl")
 sinclude("/home/johanr/projects/EBPF/test_linear/filters_eventbased.jl")
-f = @spawnat 69 isdefined(:fix_sym)
+f = @spawnat 10 isdefined(:fix_sym)
 fetch(f)
 # Add common constants and functions
 @everywhere begin
@@ -71,7 +71,7 @@ fetch(f)
 
         # Eventbased implementations
         X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, fail_ebpf, res_ebpf = ebpf(y, sys, par, δ)
-        X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, fail_eapf, res_ebpf = eapf(y, sys, par, δ)
+        X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, fail_eapf, res_eapf = eapf(y, sys, par, δ)
 
         if idx[1] == 1 && idx[2] == 1
             xh_kal, P_kal = kalman_filter(y, sys)
@@ -102,10 +102,10 @@ fetch(f)
         return Dict{String,Array{Float64}}(
                     "Neff_ebpf" => Neff_ebpf,
                     "Neff_eapf" => Neff_eapf,
-                    "fail_ebpf" => sum(fail_ebpf),
-                    "fail_eapf" => sum(fail_eapf),
-                    "res_ebpf" => sum(res_ebpf),
-                    "res_eapf" => sum(res_eapf),
+                    "fail_ebpf" => fail_ebpf,
+                    "fail_eapf" => fail_eapf,
+                    "res_ebpf" => res_ebpf,
+                    "res_eapf" => res_eapf,
                     "err_ebpf" => err_ebpf,
                     "err_eapf" => err_eapf,
                     "err_ebse" => err_ebse,
