@@ -98,23 +98,6 @@ function apf(y, sys, par)
     for k = 2:sys.T
     	# Calculate the auxiliary weights
 
-        """
-        for i = 1:par.N
-            μ = mean(f(X[i, :, k-1], k-1)).^2/20 + Q/20
-            Σ = mean(f(X[i, :, k-1], k-1)).^2*Q/100 + Q.^2/200 + R
-    	    q_aux_list[i] = MvNormal(reshape(μ, 1), Σ)
-    	    V[i, k-1] = W[i, k-1] * pdf(q_aux_list[i], y[:,k])
-    	end
-
-        for i = 1:par.N
-            Ck = (f(X[i, :, k-1], k))/10
-
-            μ = h(f(X[i, :, k-1], k), k)
-            Σ = Ck*Qh*Ck' + Rh
-    	    q_aux_list[i] = MvNormal(reshape(μ, 1), Σ)
-    	    V[i, k-1] = W[i, k-1] * pdf(q_aux_list[i], y[:,k])
-    	end
-        """
         for i = 1:par.N
             p = f(X[i, :, k-1], k)
 
@@ -142,30 +125,6 @@ function apf(y, sys, par)
         end
 	    q_aux_list = q_aux_list[idx]
 
-        """
-        # Propagate
-        for i = 1:par.N
-            μ = [(mean(f(Xr[i, :], k-1)))[:], (mean(f(Xr[i, :], k-1)).^2/20 + Q/20)[:]]
-            Σ = [Q[:] (mean(f(Xr[i, :], k-1))*Q/10)[:];
-                (mean(f(Xr[i, :], k-1))*Q/10)[:] (mean(f(Xr[i, :], k-1)).^2*Q/100 + Q.^2/200 + R)[:]]
-
-            q_list[i] = MvNormal(μ[1] + Σ[1,2]*inv(Σ[2,2])*(y[k]-μ[2]),
-                                Σ[1,1] - Σ[1,2]*inv(Σ[2,2])*Σ[1,2]')
-            X[i, :, k] = rand(q_list[i])
-        end
-
-        for i = 1:par.N
-            Ck = (f(Xr[i, :], k))/10
-
-            μ = [f(Xr[i, :], k), (f(Xr[i, :], k))/10]
-            Σ = [Qh Qh*Ck';
-                Ck*Qh (Ck*Qh*Ck' + Rh)]
-
-            q_list[i] = MvNormal(μ[1] + Σ[1,2]*inv(Σ[2,2])*(y[:,k]-μ[2]),
-                                Σ[1,1] - Σ[1,2]*inv(Σ[2,2])*Σ[1,2]')
-            X[i, :, k] = rand(q_list[i])
-        end
-        """
         for i = 1:par.N
             p = f(Xr[i, :], k)
 
