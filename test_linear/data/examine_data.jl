@@ -4,14 +4,12 @@ using JLD
 using PyPlot
 
 read_new = true
-
-N = [10 25 50 75 100 150 200 250 300 350 400 500]
-Δ = [0 0.4 0.8 1.2 1.6 2.0 2.4 2.8 3.2 3.6 4.0]
+N = [100]
+Δ = [0 0.8 1.6 2.4 3.2 4.0]
 
 m = length(N)
 n = length(Δ)
-L = 50
-k = 1000
+k = 100
 
 function calc_recursive(M, n, y)
     T = size(y, 2)
@@ -46,7 +44,7 @@ if read_new
         for i2 = 1:n
             println(string(i1)*" "*string(i2))
 
-            E = load("/home/johanr/projects/EBPF/test_linear/data/test_linear_system_run2/sim_" * string(i1) * "_" * string(i2) * ".jld", "results")
+            E = load("/home/johanr/projects/EBPF/test_linear/data/test_linear_system_run_small/sim_" * string(i1) * "_" * string(i2) * ".jld", "results")
 
             counters = Dict{String,Int64}(
                 "ebpf" => 0,
@@ -115,8 +113,7 @@ if read_new
 end
 
 
-N_lags = 12
-Δ_lags = 11
+N_lags = 1
 
 figure(1)
 clf()
@@ -166,6 +163,7 @@ plot(Δ[:], m[2], "C1o-")
 plot(Δ[:], m[3], "C2^-")
 plot(Δ[:], m[4]*ones(n), "r--")
 
+"""
 figure(3)
 clf()
 subplot(1, 2, 1)
@@ -189,3 +187,4 @@ plot(N[:], m[1], "C0x-")
 plot(N[:], m[2], "C1o-")
 plot(N[:], m[3]*ones(length(N)), "C2^-")
 plot(N[:], m[4]*ones(length(N)), "r--")
+"""
