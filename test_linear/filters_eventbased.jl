@@ -34,6 +34,7 @@ function ebpf(y, sys, par, δ)
 
     idx = collect(1:N)
     Xr = X[:, :, 1]
+    Wr = W[:, 1]
 
     N_T = N / 2
     for k = 2:T
@@ -61,9 +62,10 @@ function ebpf(y, sys, par, δ)
                 idx[i] = c
             end
 
-            W[:, k-1] = 1/N .* ones(N, 1)
+            Wr = 1/N .* ones(N, 1)
             res[k] = 1
         else
+            Wr = W[:, k-1]
             idx = 1:N
         end
         # Resample
@@ -86,7 +88,7 @@ function ebpf(y, sys, par, δ)
                 # There are no general cdf for multivariate distributions, this
                 # only works if y is a scalar
                 D = Normal((C*X[i, :, k])[1], R[1])
-                W[i, k] = W[i, k-1] * (cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ))
+                W[i, k] = Wr[i] * (cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ))
             end
         end
 
@@ -313,6 +315,7 @@ function eapf(y, sys, par, δ)
     q_aux_list = Array{Distribution}(N)
 
     Xr = X[:, :, 1]
+    Wr = W[:, 1]
 
     N_T = N/2
     resample = false
@@ -353,6 +356,7 @@ function eapf(y, sys, par, δ)
                 for j = 1:M
                     predLh += pdf(q_aux_list[i], yh[j, :])
                 end
+                predLh /= M
 
                 V[i, k-1] = W[i, k-1] * predLh
 
@@ -361,7 +365,6 @@ function eapf(y, sys, par, δ)
 	    V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
 
         N_eff[k-1] = 1/sum(V[:, k-1].^2)
-
         if N_eff[k-1] < N_T
             # Resample using systematic resampling
             idx = collect(1:N)
@@ -375,10 +378,11 @@ function eapf(y, sys, par, δ)
                 idx[i] = c
             end
 
-            W[:, k-1] = 1/N * ones(N, 1)
+            Wr = 1/N * ones(N, 1)
             res[k] = 1
             resample = true
         else
+            Wr = W[:, k-1]
             idx = 1:N
             resample  = false
         end
@@ -392,11 +396,21 @@ function eapf(y, sys, par, δ)
         # Propagate
         if Γ[k] == 1
             for i = 1:N
+
+                """
                 S = (inv(Q) + C'*inv(R)*C) \ eye(Q)
 
                 μ = S*(inv(Q)*A*Xr[i, :] + C'*inv(R)*Z[:, k])
                 Σ = S
 
+                Σ = fix_sym(Σ)
+                """
+                m = [A*Xr[i,:], C*A*Xr[i, :]]
+                S = [[Q] [Q*C'];
+                    [C*Q] [C*Q*C' + R]]
+
+                μ = m[1] + S[1,2]*inv(S[2, 2])*(Z[:, k] - m[2])
+                Σ = S[1,1] - S[1, 2]*inv(S[2,2])*S[1, 2]'
                 Σ = fix_sym(Σ)
 
                 q_list[i] = MvNormal(μ, Σ)
@@ -404,6 +418,7 @@ function eapf(y, sys, par, δ)
             end
         else
             for i = 1:par.N
+                """
                 S = (inv(Q) + C'*inv(R + Vn)*C) \ eye(Q)
 
                 μ_func(yh) = S * (inv(Q)*A*Xr[i, :] + C'*inv(R + Vn)*yh)
@@ -422,8 +437,17 @@ function eapf(y, sys, par, δ)
                     println("Bad conditioned weights for Mixture Gaussian; resetting to uniform")
                     wh = 1 / M * ones(M)
                 end
+                """
+                m = [A*Xr[i,:], C*A*Xr[i, :]]
+                S = [[Q] [Q*C'];
+                    [C*Q] [C*Q*C' + R + Vn]]
 
-                MD = MixtureModel(map(y -> MvNormal([μ_func(y)...], Σ), yh), wh)
+                μ_func(x) = m[1] + S[1,2]*inv(S[2, 2])*(x - m[2])
+                Σ = S[1,1] - S[1, 2]*inv(S[2,2])*S[1, 2]'
+                Σ = fix_sym(Σ)
+
+
+                MD = MixtureModel(map(y -> MvNormal([μ_func(y)...], Σ), yh))
 
                 q_list[i] = MD
                 X[i, :, k] = rand(q_list[i])
@@ -434,11 +458,11 @@ function eapf(y, sys, par, δ)
         if Γ[k] == 1
             for i = 1:par.N
                 if resample == true
-                    W[i, k] = pdf(MvNormal(C*X[i, :, k], R), Z[:,k]) *
+                    W[i, k] = Wr[i]*pdf(MvNormal(C*X[i, :, k], R), Z[:,k]) *
                               pdf(MvNormal(A*Xr[i, :], Q), X[i, :, k]) /
                               (pdf(q_list[i], X[i, :, k]) * pdf(q_aux_list[i], Z[:, k]))
                 elseif resample == false
-                    W[i, k] = W[i, k-1] * pdf(MvNormal(C*X[i, :, k], R), Z[:,k]) *
+                    W[i, k] = Wr[i] * pdf(MvNormal(C*X[i, :, k], R), Z[:,k]) *
                               pdf(MvNormal(A*Xr[i, :], Q), X[i, :, k]) /
                               (pdf(q_list[i], X[i, :, k]))
                 end
@@ -457,14 +481,15 @@ function eapf(y, sys, par, δ)
                 for j = 1:M
                     pL += pdf(q_aux_list[i], yh[j, :])
                 end
+                pL /= M
 
                 # proposal distribution
                 q = pdf(q_list[i], X[i, :, k])
 
                 if resample == true
-                    W[i, k] = g*f / (pL*q)
+                    W[i, k] = Wr[i]*g*f / (pL*q)
                 elseif resample == false
-                    W[i, k] = W[i, k-1] * g*f / q
+                    W[i, k] = Wr[i] * g*f / q
                 end
 
             end

@@ -11,7 +11,7 @@ include("filters_eventbased.jl")
 
 # Parameters
 N = 100
-T = 1000
+T = 500
 δ = 4
 
 # Nonlinear and non-Gaussian system
@@ -64,6 +64,17 @@ println("EBPF x2: $(mean(err_ebpf[2, :].^2))")
 println("")
 println("EAPF x1: $(mean(err_eapf[1, :].^2))")
 println("EAPF x2: $(mean(err_eapf[2, :].^2))")
+println("")
+println("Error at new measurements")
+println("EBPF x1: $(mean(err_ebpf_t[1, :].^2))")
+println("EBPF x2: $(mean(err_ebpf_t[2, :].^2))")
+println("")
+println("EAPF x1: $(mean(err_eapf_t[1, :].^2))")
+println("EAPF x2: $(mean(err_eapf_t[2, :].^2))")
+println("")
+println("Effective sample size")
+println("EBPF: $(mean(Neff_ebpf))")
+println("EAPF: $(mean(Neff_eapf))")
 println("")
 println("Resamples")
 println("EBPF: $(sum(res_ebpf))")
