@@ -15,6 +15,9 @@ W = 23
 addprocs(W)
 
 @everywhere begin
+    using StatsBase
+    using Distributions
+
     include("../src/misc.jl")
     include("filters.jl")
     include("filters_eventbased.jl")
@@ -42,8 +45,8 @@ addprocs(W)
         par = pf_params(N)
 
         # Eventbased implementations
-        X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf = ebpf(y, sys, par, δ)
-        X_eapf, W_eapf, Z_eapf, Γ_eapf = eapf(y, sys, par, δ)
+        X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, res_ebpf, fail_ebpf = ebpf(y, sys, par, δ)
+        X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, res_eapf, fail_eapf = eapf(y, sys, par, δ)
 
         if idx[1] == 1 && idx[2] == 1
             xh_kal, P_kal = kalman_filter(y, sys)
@@ -72,6 +75,12 @@ addprocs(W)
         err_eapf = x - xh_eapf
 
         return Dict{String,Array{Float64}}(
+                    "Neff_ebpf" => Neff_ebpf,
+                    "Neff_eapf" => Neff_eapf,
+                    "res_ebpf" => res_ebpf,
+                    "res_eapf" => res_eapf,
+                    "fail_ebpf" => fail_ebpf,
+                    "fail_eapf" => fail_eapf,
                     "err_ebpf" => err_ebpf,
                     "err_eapf" => err_eapf,
                     "err_ebse" => err_ebse,

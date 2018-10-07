@@ -104,7 +104,7 @@ function ebpf(y, sys, par, δ)
 
     end
 
-    return X, W, Z, Γ, N_eff, fail, res
+    return X, W, Z, Γ, N_eff, res, fail
 end
 
 function esis(y, sys, par, δ)
@@ -518,7 +518,7 @@ function eapf(y, sys, par, δ)
 
     end
 
-    return X, W, Z, Γ, N_eff, fail, res
+    return X, W, Z, Γ, N_eff, res, fail
 end
 
 
