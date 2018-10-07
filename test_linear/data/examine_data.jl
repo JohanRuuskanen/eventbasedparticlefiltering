@@ -4,7 +4,7 @@ using JLD
 using PyPlot
 
 read_new = true
-N = [100]
+N = [500]
 Δ = [0 0.8 1.6 2.4 3.2 4.0]
 
 m = length(N)
