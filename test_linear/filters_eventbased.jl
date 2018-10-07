@@ -446,8 +446,19 @@ function eapf(y, sys, par, δ)
                 Σ = S[1,1] - S[1, 2]*inv(S[2,2])*S[1, 2]'
                 Σ = fix_sym(Σ)
 
+                wh = zeros(M)
+                for j = 1:M
+                    wh[j] = pdf(MvNormal(C*A*Xr[i, :], C*Q*C' + R + Vn), yh[j, :])
+                end
 
-                MD = MixtureModel(map(y -> MvNormal([μ_func(y)...], Σ), yh))
+                if sum(wh) > 0
+                    wh = wh ./ sum(wh)
+                else
+                    println("Bad conditioned weights for Mixture Gaussian; resetting to uniform")
+                    wh = 1 / M * ones(M)
+                end
+
+                MD = MixtureModel(map(y -> MvNormal([μ_func(y)...], Σ), yh), wh)
 
                 q_list[i] = MD
                 X[i, :, k] = rand(q_list[i])
