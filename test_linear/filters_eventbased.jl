@@ -48,8 +48,8 @@ function ebpf(y, sys, par, δ)
             Z[:, k] = Z[:, k-1]
         end
 
-        N_eff[k-1] = 1./sum(W[:, k-1].^2)
-        if N_eff[k-1] < N_T
+        N_eff[k] = 1./sum(W[:, k-1].^2)
+        if N_eff[k] < N_T
             # Resample using systematic resampling
             idx = collect(1:N)
             wc = cumsum(W[:, k-1])
@@ -62,15 +62,13 @@ function ebpf(y, sys, par, δ)
                 idx[i] = c
             end
 
+            Xr = X[idx, :, k-1]
             Wr = 1/N .* ones(N, 1)
             res[k] = 1
         else
+            Xr = X[:, :, k-1]
             Wr = W[:, k-1]
             idx = 1:N
-        end
-        # Resample
-        for i = 1:N
-            Xr[i, :] = X[idx[i], :, k-1]
         end
 
         # Propagate
@@ -81,14 +79,14 @@ function ebpf(y, sys, par, δ)
         # Weight
         if Γ[k] == 1
             for i = 1:N
-                W[i, k] = W[i, k-1]*pdf(MvNormal(C*X[i, :, k], R), y[:, k])
+                W[i, k] = Wr[i]*pdf(MvNormal(C*X[i, :, k], R), y[:, k])
             end
         else
             for i = 1:N
                 # There are no general cdf for multivariate distributions, this
                 # only works if y is a scalar
                 D = Normal((C*X[i, :, k])[1], R[1])
-                W[i, k] = Wr[i] * (cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ))
+                W[i, k] = Wr[i]*(cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ))
             end
         end
 
@@ -318,8 +316,6 @@ function eapf(y, sys, par, δ)
     Wr = W[:, 1]
 
     N_T = N/2
-    resample = false
-
     yh = zeros(M)
 
     for k = 2:T
@@ -364,8 +360,8 @@ function eapf(y, sys, par, δ)
         end
 	    V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
 
-        N_eff[k-1] = 1/sum(V[:, k-1].^2)
-        if N_eff[k-1] < N_T
+        N_eff[k] = 1/sum(V[:, k-1].^2)
+        if N_eff[k] < N_T
             # Resample using systematic resampling
             idx = collect(1:N)
             wc = cumsum(V[:, k-1])
@@ -378,20 +374,14 @@ function eapf(y, sys, par, δ)
                 idx[i] = c
             end
 
+            Xr = X[idx, :, k-1]
             Wr = 1/N * ones(N, 1)
+            q_aux_list = q_aux_list[idx]
             res[k] = 1
-            resample = true
         else
+            Xr = X[:, :, k-1]
             Wr = W[:, k-1]
-            idx = 1:N
-            resample  = false
         end
-
-        # Resample
-        for i = 1:N
-            Xr[i, :] = X[idx[i], :, k-1]
-        end
-        q_aux_list = q_aux_list[idx]
 
         # Propagate
         if Γ[k] == 1
@@ -468,12 +458,12 @@ function eapf(y, sys, par, δ)
         # Weight
         if Γ[k] == 1
             for i = 1:par.N
-                if resample == true
+                if res[k] == 1
                     W[i, k] = Wr[i]*pdf(MvNormal(C*X[i, :, k], R), Z[:,k]) *
                               pdf(MvNormal(A*Xr[i, :], Q), X[i, :, k]) /
                               (pdf(q_list[i], X[i, :, k]) * pdf(q_aux_list[i], Z[:, k]))
-                elseif resample == false
-                    W[i, k] = Wr[i] * pdf(MvNormal(C*X[i, :, k], R), Z[:,k]) *
+                else
+                    W[i, k] = Wr[i]*pdf(MvNormal(C*X[i, :, k], R), Z[:,k]) *
                               pdf(MvNormal(A*Xr[i, :], Q), X[i, :, k]) /
                               (pdf(q_list[i], X[i, :, k]))
                 end
@@ -497,9 +487,9 @@ function eapf(y, sys, par, δ)
                 # proposal distribution
                 q = pdf(q_list[i], X[i, :, k])
 
-                if resample == true
+                if res[k] == 1
                     W[i, k] = Wr[i]*g*f / (pL*q)
-                elseif resample == false
+                else
                     W[i, k] = Wr[i] * g*f / q
                 end
 

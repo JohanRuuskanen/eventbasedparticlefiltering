@@ -11,7 +11,7 @@ include("filters_eventbased.jl")
 
 # Parameters
 N = 100
-T = 500
+T = 200
 δ = 4
 
 # Nonlinear and non-Gaussian system
@@ -34,8 +34,8 @@ ny = size(C, 1)
 # For estimation
 par = pf_params(N)
 
-X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, fail_ebpf, res_ebpf = ebpf(y, sys, par, δ)
-X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, fail_eapf, res_eapf = eapf(y, sys, par, δ)
+X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, res_ebpf, fail_ebpf = ebpf(y, sys, par, δ)
+X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, res_eapf, fail_eapf = eapf(y, sys, par, δ)
 #xh_ebse, ~, Z_ebse, Γ_ebse = ebse(y, sys, δ)
 
 xh_ebpf = zeros(nx, T)
