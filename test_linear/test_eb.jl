@@ -4,9 +4,6 @@ using StatsBase
 using Distributions
 
 include("../src/misc.jl")
-#include("../src/event_kernels.jl")
-
-#include("filters.jl")
 include("filters_eventbased.jl")
 
 # Parameters
@@ -36,7 +33,6 @@ par = pf_params(N)
 
 X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, res_ebpf, fail_ebpf = ebpf(y, sys, par, δ)
 X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, res_eapf, fail_eapf = eapf(y, sys, par, δ)
-#xh_ebse, ~, Z_ebse, Γ_ebse = ebse(y, sys, δ)
 
 xh_ebpf = zeros(nx, T)
 xh_eapf = zeros(nx, T)
@@ -47,15 +43,12 @@ end
 
 err_ebpf = x - xh_ebpf
 err_eapf = x - xh_eapf
-#err_ebse = x - xh_ebse
 
 idx_bpf = find(x -> x == 1, Γ_ebpf)
 idx_apf = find(x -> x == 1, Γ_eapf)
-#idx_ebse = find(x -> x == 1, Γ_ebse)
 
-err_ebpf_t = x[:, idx_bpf] - xh_ebpf[:, idx_bpf]
-err_eapf_t = x[:, idx_apf] - xh_eapf[:, idx_apf]
-#err_ebse_t = x[:, idx_ebse] - xh_ebse[:, idx_ebse]
+err_ebpf_t = err_ebpf[:, idx_bpf]
+err_eapf_t = err_eapf[:, idx_apf]
 
 println("")
 println("Total error")
@@ -72,20 +65,15 @@ println("")
 println("EAPF x1: $(mean(err_eapf_t[1, :].^2))")
 println("EAPF x2: $(mean(err_eapf_t[2, :].^2))")
 println("")
-println("Effective sample size")
-println("EBPF: $(mean(Neff_ebpf))")
-println("EAPF: $(mean(Neff_eapf))")
+println("Special")
+println("EBPF Neff: $(mean(Neff_ebpf))")
+println("EBPF res: $(sum(res_ebpf))")
+println("EBPF fail: $(sum(fail_ebpf))")
 println("")
-println("Resamples")
-println("EBPF: $(sum(res_ebpf))")
-println("EAPF: $(sum(res_eapf))")
+println("EAPF Neff: $(mean(Neff_eapf))")
+println("EAPF res: $(sum(res_eapf))")
+println("EAPF fail: $(sum(fail_eapf))")
 println("")
-println("Failures")
-println("EBPF: $(sum(fail_ebpf))")
-println("EAPF: $(sum(fail_eapf))")
-println("")
-#println("EBSE x1: $(mean(err_ebse[1, :].^2)) ± $(std(err_ebse[1, :].^2))")
-#println("EBSE x2: $(mean(err_ebse[2, :].^2)) ± $(std(err_ebse[2, :].^2))")
 
 figure(1)
 clf()
@@ -105,18 +93,21 @@ plot(xh_ebpf[2, :])
 plot(xh_eapf[2, :])
 legend(["True", "EBPF", "EAPF"])
 
-idx_ebpf = find(x->x==1, Γ_ebpf)
-idx_res_ebpf = find(x->x==1, res_ebpf) - 1
-idx_eapf = find(x->x==1, Γ_eapf)
-idx_res_eapf = find(x->x==1, res_eapf) - 1
+
+idx_res_ebpf = find(x->x == 1, res_ebpf)
+idx_fail_ebpf = find(x->x == 1, fail_ebpf)
+idx_res_eapf = find(x->x == 1, res_eapf)
+idx_fail_eapf = find(x->x == 1, fail_eapf)
 figure(2)
 clf()
+title("Effective sample size")
 subplot(2, 1, 1)
-plot(1:T, Neff_ebpf)
-plot((1:T)[idx_res_ebpf], Neff_ebpf[idx_res_ebpf], "bx")
-plot((1:T)[idx_ebpf], Neff_ebpf[idx_ebpf], "bo")
+plot(1:T, Neff_ebpf, "C0")
+plot((1:T)[idx_res_ebpf], Neff_ebpf[idx_res_ebpf], "C0o")
+plot((1:T)[idx_fail_ebpf], Neff_ebpf[idx_fail_ebpf], "C0x")
 subplot(2, 1, 2)
-plot(1:T, Neff_eapf)
-plot((1:T)[idx_res_eapf], Neff_eapf[idx_res_eapf], "bx")
-plot((1:T)[idx_eapf], Neff_eapf[idx_eapf], "bo")
-#plot(1:T, Neff_eapf)
+plot(1:T, Neff_eapf, "C0")
+plot((1:T)[idx_res_eapf], Neff_eapf[idx_res_eapf], "C0o")
+plot((1:T)[idx_fail_eapf], Neff_eapf[idx_fail_eapf], "C0x")
+
+
