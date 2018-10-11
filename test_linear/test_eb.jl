@@ -7,8 +7,8 @@ include("../src/misc.jl")
 include("filters_eventbased.jl")
 
 # Parameters
-N = 200
-T = 1000
+N = 100
+T = 200
 δ = 4
 
 # Nonlinear and non-Gaussian system

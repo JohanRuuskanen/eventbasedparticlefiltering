@@ -77,17 +77,19 @@ function ebpf(y, sys, par, δ)
         # Weight
         if Γ[k] == 1
             for i = 1:N
-                W[i, k] = Wr[i]*pdf.(sys.v, y[k] - h(X[i, :, k], k)[1])
+                W[i, k] = log(Wr[i]) + log(pdf.(sys.v, y[k] - h(X[i, :, k], k)[1]))
             end
         elseif Γ[k] == 0
             for i = 1:N
                 D = Normal(h(X[i, :, k], k)[1], std(v))
-                W[i, k] = Wr[i]*cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ)
+                W[i, k] = log(Wr[i]) + log(cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ))
             end
         end
 
-        if sum(W[:, k]) > 0
-            W[:, k] = W[:, k] ./ sum(W[:, k])
+        W_max = maximum(W[:, k])
+        if W_max > -Inf
+            W_tmp = exp.(W[:, k] - W_max*ones(N, 1))
+            W[:, k] = W_tmp ./ sum(W_tmp)
         else
             println("Warning BPF: restting weights to uniform")
             W[:, k] = 1/N .* ones(N, 1)
@@ -176,9 +178,8 @@ function eapf(y, sys, par, δ)
                 Σ = JP_sig(X[i, :, k-1], k, R)
 
                 q_aux_list[i] = MvNormal(μ[2], sqrt(Σ[2,2]))
-        	    V[i, k-1] = W[i, k-1] * pdf(q_aux_list[i], y[:,k])
+                V[i, k-1] = log(W[i, k-1]) + log(pdf(q_aux_list[i], y[:,k]))
         	end
-            V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
         else
             for i = 1:par.N
                 μ = JP_mu(X[i, :, k-1], k)
@@ -189,10 +190,19 @@ function eapf(y, sys, par, δ)
                 for j = 1:M
                     predLh += pdf(q_aux_list[i], yh[j, :])
                 end
-                V[i, k-1] = W[i, k-1] * predLh
+                V[i, k-1] = log(W[i, k-1]) + log(predLh)
             end
         end
-	V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
+        V_max = maximum(V[:, k-1])
+        if V_max > -Inf
+            V_tmp = exp.(V[:, k-1] - V_max*ones(N, 1))
+            V[:, k-1] = V_tmp ./ sum(V_tmp)
+        else
+            println("Warning APF: setting auxiliary weights to W(k-1)")
+            V[:, k-1] = W[:, k-1]
+            fail[k] = 1
+            Neff[k] = 0
+        end
 
         Neff[k] = 1/sum(V[:, k-1].^2)
         if Neff[k] < N_T 
@@ -261,13 +271,14 @@ function eapf(y, sys, par, δ)
         if Γ[k] == 1
             for i = 1:par.N
                 if res[k] == 1
-                    W[i, k] = Wr[i]*pdf(v, Z[:,k] - h(X[i, :, k], k))[1] *
-                            pdf(w, X[i, :, k] - f(Xr[i, :], k))[1] /
-                            (pdf(q_list[i], X[i, :, k]) * pdf(q_aux_list[i], Z[:, k]))
+                    W[i, k] = log(Wr[i]) + log(pdf(v, Z[:,k] - h(X[i, :, k], k))[1]) +
+                                log(pdf(w, X[i, :, k] - f(Xr[i, :], k))[1]) -
+                                log(pdf(q_list[i], X[i, :, k])) -
+                                log(pdf(q_aux_list[i], Z[:, k]))
                 else
-                    W[i, k] = Wr[i]*pdf(v, Z[:,k] - h(X[i, :, k], k))[1] *
-                            pdf(w, X[i, :, k] - f(Xr[i, :], k))[1] /
-                            (pdf(q_list[i], X[i, :, k]))
+                    W[i, k] = log(Wr[i]) + log(pdf(v, Z[:,k] - h(X[i, :, k], k))[1]) +
+                                log(pdf(w, X[i, :, k] - f(Xr[i, :], k))[1]) -
+                                log(pdf(q_list[i], X[i, :, k]))
                 end
             end
         else
@@ -275,7 +286,6 @@ function eapf(y, sys, par, δ)
                 # Likelihood
                 D = Normal(h(X[i, :, k], k)[1], sqrt(R))
                 py = cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ)
-
 
                 # Propagation
                 px = pdf(w, X[i, :, k] - f(Xr[i, :], k))[1]
@@ -289,20 +299,20 @@ function eapf(y, sys, par, δ)
                     for j = 1:M
                         pL += pdf(q_aux_list[i], yh[j, :])
                     end
-                    
 
-                    W[i, k] = Wr[i]*py*px / (pL*q)
+                    W[i, k] = log(Wr[i]) + log(py) + log(px) - log(pL) - log(q)
                 else
-                    W[i, k] = Wr[i]*py*px / q
+                    W[i, k] = log(Wr[i]) + log(py) + log(px) - log(q)
                 end
 
 
             end
         end
 
-
-        if sum(W[:, k]) > 0
-            W[:, k] = W[:, k] ./ sum(W[:, k])
+        W_max = maximum(W[:, k])
+        if W_max > -Inf
+            W_tmp = exp.(W[:, k] - W_max*ones(N, 1))
+            W[:, k] = W_tmp ./ sum(W_tmp)
         else
             println("Bad conditioned weights for EAPF! Resetting to uniform")
             W[:, k] = 1/par.N * ones(par.N, 1)
