@@ -1,15 +1,16 @@
-ENV["JULIA_PKGDIR"] = "/home/johanr/.julia"
+ENV["JULIA_PKGDIR"] = "/local/home/johanr/.julia"
 
 using JLD
 using PyPlot
+include("../../src/misc.jl")
 
-read_new = true
-N = [500]
-Δ = [0 0.8 1.6 2.4 3.2 4.0]
+read_new = false
+N = [10 25 50 75 100 150 200 250 300 350 400 500]
+Δ = [4.0]
 
 m = length(N)
 n = length(Δ)
-k = 100
+k = 1000
 
 function calc_recursive(M, n, y)
     T = size(y, 2)
@@ -21,6 +22,9 @@ function calc_recursive(M, n, y)
     end
     return M, n
 end
+
+ex = 7
+errors = zeros(2,2,1000)
 
 if read_new
     Err_bpf = Dict{String,Array{Float64}}(
@@ -50,7 +54,7 @@ if read_new
         for i2 = 1:n
             println(string(i1)*" "*string(i2))
 
-            E = load("/home/johanr/projects/EBPF/test_linear/data/test_linear_system_run_small/sim_" * string(i1) * "_" * string(i2) * ".jld", "results")
+            E = load("/local/home/johanr/Projects/EBPF/test_linear/data/test_results_over_N/sim_" * string(i1) * "_" * string(i2) * ".jld", "results")
 
             counters = Dict{String,Int64}(
                 "ebpf" => 0,
@@ -61,6 +65,8 @@ if read_new
                 "ebse_g1" => 0,
                 "kalman" => 0
             )
+
+
 
             for i3 = 1:k
                 bpf_measure = E[i3]["err_ebpf"]
@@ -102,6 +108,12 @@ if read_new
                     calc_recursive(Err_apf["mean_g1"][i1, i2, :], counters["eapf_g1"],
                                     apf_measure[:, idx_apf].^2)
 
+                if i1 == ex
+                    errors[1, :, i3] = mean(bpf_measure[:, idx_bpf], 2).^2
+                    errors[2, :, i3] = mean(apf_measure[:, idx_apf], 2).^2
+                end
+
+
                 if i1 == 1
                     if i2 == 1
                         Err_kalman["mean"], counters["kalman"] =
@@ -139,8 +151,9 @@ if read_new
 end
 
 
-N_lags = 1
+Δ_lags = 1
 
+#=
 figure(1)
 clf()
 subplot(1, 2, 1)
@@ -188,44 +201,70 @@ plot(Δ[:], m[1], "C0x-")
 plot(Δ[:], m[2], "C1o-")
 plot(Δ[:], m[3], "C2^-")
 plot(Δ[:], m[4]*ones(n), "r--")
+=#
 
-"""
-figure(3)
+fig3 = figure(3)
 clf()
 subplot(1, 2, 1)
-title("State x_1")
+title("All values, State x_1")
+m = [log.(Err_bpf["mean"][:, Δ_lags, 1]),
+     log.(Err_apf["mean"][:, Δ_lags, 1]),
+     log.(Err_ebse["mean"][Δ_lags, 1]),
+     log.(Err_kalman["mean"][1])]
+plot(N[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+#plot(N[:], m[4]*ones(length(N)), "r--")
+legend(["BPF", "APF", "EBSE", "Kalman"])
+subplot(1, 2, 2)
+title("All values, State x_2")
+m = [log.(Err_bpf["mean"][:, Δ_lags, 2]),
+     log.(Err_apf["mean"][:, Δ_lags, 2]),
+     log.(Err_ebse["mean"][Δ_lags, 2]),
+     log.(Err_kalman["mean"][2])]
+plot(N[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+#plot(N[:], m[4]*ones(length(N)), "r--")
+
+fig4 = figure(4)
+clf()
+subplot(1, 2, 1)
+title("Measurement values, State x_1")
 m = [log.(Err_bpf["mean_g1"][:, Δ_lags, 1]),
      log.(Err_apf["mean_g1"][:, Δ_lags, 1]),
      log.(Err_ebse["mean_g1"][Δ_lags, 1]),
      log.(Err_kalman["mean"][1])]
-plot(N[:], m[1], "C0x-")
-plot(N[:], m[2], "C1o-")
-plot(N[:], m[3]*ones(length(N)), "C2^-")
-plot(N[:], m[4]*ones(length(N)), "r--")
+plot(N[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+plot(N[:], m[4]*ones(length(N)), "C0--")
 legend(["BPF", "APF", "EBSE", "Kalman"])
 subplot(1, 2, 2)
-title("State x_2")
+title("Measurement values, State x_2")
 m = [log.(Err_bpf["mean_g1"][:, Δ_lags, 2]),
      log.(Err_apf["mean_g1"][:, Δ_lags, 2]),
      log.(Err_ebse["mean_g1"][Δ_lags, 2]),
      log.(Err_kalman["mean"][2])]
-plot(N[:], m[1], "C0x-")
-plot(N[:], m[2], "C1o-")
-plot(N[:], m[3]*ones(length(N)), "C2^-")
-plot(N[:], m[4]*ones(length(N)), "r--")
+plot(N[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+plot(N[:], m[4]*ones(length(N)), "C0--")
 
-figure(4)
+fig5 = figure(5)
 clf()
 subplot(3, 1, 1)
 title("Effective sample size")
-plot(Δ[:], Err_bpf["Neff"][N_lags, :], "C0x-")
-plot(Δ[:], Err_apf["Neff"][N_lags, :], "C1o-")
+plot(N[:], Err_bpf["Neff"][:, Δ_lags], "C0x-")
+plot(N[:], Err_apf["Neff"][:, Δ_lags], "C1o-")
+legend(["BPF", "APF"])
 subplot(3, 1, 2)
 title("Number of failures")
-plot(Δ[:], Err_bpf["fail"][N_lags, :], "C0x-")
-plot(Δ[:], Err_apf["fail"][N_lags, :], "C1o-")
+plot(N[:], Err_bpf["fail"][:, Δ_lags], "C0x-")
+plot(N[:], Err_apf["fail"][:, Δ_lags], "C1o-")
+legend(["BPF", "APF"])
 subplot(3, 1, 3)
 title("Triggered resamples")
-plot(Δ[:], Err_bpf["res"][N_lags, :], "C0x-")
-plot(Δ[:], Err_apf["res"][N_lags, :], "C1o-")
-"""
+plot(N[:], Err_bpf["res"][:, Δ_lags], "C0x-")
+plot(N[:], Err_apf["res"][:, Δ_lags], "C1o-")
+legend(["BPF", "APF"])

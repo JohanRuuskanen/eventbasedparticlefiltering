@@ -1,6 +1,6 @@
 
 using PyCall
-using Plots
+using PyPlot
 using StatsBase
 using Distributions
 
@@ -66,70 +66,69 @@ fig1 = figure(1)
 clf()
 vx = 0
 a = 1/pdf(d1, mean(d1))
-plot3D(vx*ones(N), y, a*pdf.(d1, y), "C0")    
-plot3D(vx*ones(nx), X1, a*pdf.(d1, X1), "C1o")
-for k = 1:nx
-    plot3D(vx*ones(N2), X1[k]*ones(N2), [0, a*pdf.(d1, X1[k])], "C1:")
-end
-vx = 1
-a = 1/pdf(d2, mean(d2))
-plot3D(vx*ones(N), y, a*pdf.(d2, y), "C0")    
-plot3D(vx*ones(nx), X2_bpf, a*pdf.(d2, X2_bpf), "C1o")
+plot3D(vx*ones(N), y, a*pdf.(d1, y), "C0", linewidth=2.0)    
 for k = 1:nx
     plot3D([0, 1], [X1[idx[k]], X2_bpf[k]], [0, 0], "C1:")
-    plot3D(vx*ones(N2), X2_bpf[k]*ones(N2), [0, a*pdf.(d2, X2_bpf[k])], "C1:")
+    plot3D(vx*ones(N2), X1[k]*ones(N2), [0, a*pdf.(d1, X1[k])], "C1--")
 end
-
+plot3D(vx*ones(nx), X1, a*pdf.(d1, X1), "C1o", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+vx = 1
+a = 1/pdf(d2, mean(d2))
+plot3D(vx*ones(N), y, a*pdf.(d2, y), "C0", linewidth=2.0)    
+for k = 1:nx
+    plot3D(vx*ones(N2), X2_bpf[k]*ones(N2), [0, a*pdf.(d2, X2_bpf[k])], "C1--")
+end
+plot3D(vx*ones(nx), X2_bpf, a*pdf.(d2, X2_bpf), "C1o", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 axis("off")
-grid(false)
-#xlim([x0, x1])
-#ylim([y0, y1])
+xlim([x0, x1])
+ylim([y0, y1])
+gca()[:view_init](30, -35)
+draw()
 
-"""
-figure(2, figsize=(s1, s2))
+fig2 = figure(2)
 clf()
 vx = 0
 a = 1/pdf(d1, mean(d1))
-plot3D(vx*ones(N), y, a*pdf.(d1, y), "C0")    
-plot3D(vx*ones(nx), X1, a*pdf.(d1, X1), "C2^")
+plot3D(vx*ones(N), y, a*pdf.(d1, y), "C0", linewidth=2.0)    
 for k = 1:nx
     plot3D([0, 1], [X1[idx[k]], X2_sis[k]], [0, 0], "C2:")
-    plot3D(vx*ones(N2), X1[k]*ones(N2), [0, a*pdf.(d1, X1[k])], "C2:")
+    plot3D(vx*ones(N2), X1[k]*ones(N2), [0, a*pdf.(d1, X1[k])], "C2--")
 end
+plot3D(vx*ones(nx), X1, a*pdf.(d1, X1), "C2^", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 vx = 1
 a = 1/pdf(d2, mean(d2))
-plot3D(vx*ones(N), y, a*pdf.(d2, y), "C0")    
-plot3D(vx*ones(nx), X2_sis, a*pdf.(d2, X2_sis), "C2^")
+plot3D(vx*ones(N), y, a*pdf.(d2, y), "C0", linewidth=2.0)    
 for k = 1:nx
-    plot3D(vx*ones(N2), X2_sis[k]*ones(N2), [0, a*pdf.(d2, X2_sis[k])], "C2:")
+    plot3D(vx*ones(N2), X2_sis[k]*ones(N2), [0, a*pdf.(d2, X2_sis[k])], "C2--")
 end
+plot3D(vx*ones(nx), X2_sis, a*pdf.(d2, X2_sis), "C2^", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 
 axis("off")
-grid(false)
 xlim([x0, x1])
 ylim([y0, y1])
+gca()[:view_init](30, -35)
+draw()
 
-figure(3, figsize=(s1, s2))
+fig3 = figure(3)
 clf()
 vx = 0
 a = 1/pdf(d1, mean(d1))
-plot3D(vx*ones(N), y, a*pdf.(d1, y), "C0")    
-plot3D(vx*ones(nx), X1, a*pdf.(d1, X1), "C3x")
+plot3D(vx*ones(N), y, a*pdf.(d1, y), "C0", linewidth=2.0)    
 for k = 1:nx
     plot3D([0, 1], [X1[idx2[k]], X2_apf[k]], [0, 0], "C3:")
-    plot3D(vx*ones(N2), X1[k]*ones(N2), [0, a*pdf.(d1, X1[k])], "C3:")
+    plot3D(vx*ones(N2), X1[k]*ones(N2), [0, a*pdf.(d1, X1[k])], "C3--")
 end
+plot3D(vx*ones(nx), X1, a*pdf.(d1, X1), "C3s", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 vx = 1
 a = 1/pdf(d2, mean(d2))
-plot3D(vx*ones(N), y, a*pdf.(d2, y), "C0")    
-plot3D(vx*ones(nx), X2_apf, a*pdf.(d2, X2_apf), "C3x")
+plot3D(vx*ones(N), y, a*pdf.(d2, y), "C0", linewidth=2.0)    
 for k = 1:nx
-    plot3D(vx*ones(N2), X2_apf[k]*ones(N2), [0, a*pdf.(d2, X2_apf[k])], "C3:")
+    plot3D(vx*ones(N2), X2_apf[k]*ones(N2), [0, a*pdf.(d2, X2_apf[k])], "C3--")
 end
+plot3D(vx*ones(nx), X2_apf, a*pdf.(d2, X2_apf), "C3s", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 
 axis("off")
-grid(false)
 xlim([x0, x1])
 ylim([y0, y1])
-"""
-
+gca()[:view_init](30, -35)
+draw()

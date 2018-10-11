@@ -7,8 +7,8 @@ include("../src/misc.jl")
 include("filters_eventbased.jl")
 
 # Parameters
-N = 100
-T = 200
+N = 200
+T = 1000
 δ = 4
 
 # Nonlinear and non-Gaussian system
@@ -109,5 +109,3 @@ subplot(2, 1, 2)
 plot(1:T, Neff_eapf, "C0")
 plot((1:T)[idx_res_eapf], Neff_eapf[idx_res_eapf], "C0o")
 plot((1:T)[idx_fail_eapf], Neff_eapf[idx_fail_eapf], "C0x")
-
-

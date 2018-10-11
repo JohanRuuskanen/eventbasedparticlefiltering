@@ -1,0 +1,155 @@
+% This file was created by matplotlib2tikz v0.6.18.
+\begin{tikzpicture}
+
+\definecolor{color1}{rgb}{1,0.498039215686275,0.0549019607843137}
+\definecolor{color0}{rgb}{0.12156862745098,0.466666666666667,0.705882352941177}
+\definecolor{color2}{rgb}{0.172549019607843,0.627450980392157,0.172549019607843}
+
+\begin{groupplot}[group style={group size=2 by 1}]
+\nextgroupplot[
+height=\figureheight,
+legend cell align={left},
+legend entries={{BPF},{APF},{EBSE}},
+legend style={draw=white!80.0!black},
+tick align=outside,
+tick pos=left,
+title={All values, State x_1},
+width=\figurewidth,
+x grid style={lightgray!92.02614379084967!black},
+xmin=-14.5, xmax=524.5,
+y grid style={lightgray!92.02614379084967!black},
+ymin=1.41441696474074, ymax=1.93081854230899,
+ytick={1.4,1.5,1.6,1.7,1.8,1.9,2},
+yticklabels={1.4,1.5,1.6,1.7,1.8,1.9,2.0}
+]
+\addlegendimage{no markers, color0}
+\addlegendimage{no markers, color1}
+\addlegendimage{no markers, color2}
+\addplot [semithick, color0, mark=x, mark size=3, mark options={solid}]
+table [row sep=\\]{%
+10	1.90734574332862 \\
+25	1.65951633614487 \\
+50	1.56461421663503 \\
+75	1.52438599105297 \\
+100	1.50313002101235 \\
+150	1.48501935995259 \\
+200	1.47732570349532 \\
+250	1.47094964081014 \\
+300	1.46700187302052 \\
+350	1.45989937670192 \\
+400	1.45981722730473 \\
+500	1.45234758446197 \\
+};
+\addplot [semithick, color1, mark=*, mark size=3, mark options={solid}]
+table [row sep=\\]{%
+10	1.60810681262404 \\
+25	1.5155966705356 \\
+50	1.47653232682083 \\
+75	1.4625055714546 \\
+100	1.45128551689047 \\
+150	1.44562209061508 \\
+200	1.44668797420197 \\
+250	1.44596823899715 \\
+300	1.44415160199622 \\
+350	1.44151159439788 \\
+400	1.44107223991082 \\
+500	1.43788976372112 \\
+};
+\addplot [semithick, color2, mark=triangle*, mark size=3, mark options={solid}]
+table [row sep=\\]{%
+10	1.46562886599946 \\
+25	1.46562886599946 \\
+50	1.46562886599946 \\
+75	1.46562886599946 \\
+100	1.46562886599946 \\
+150	1.46562886599946 \\
+200	1.46562886599946 \\
+250	1.46562886599946 \\
+300	1.46562886599946 \\
+350	1.46562886599946 \\
+400	1.46562886599946 \\
+500	1.46562886599946 \\
+};
+\path [draw=black, fill opacity=0] (axis cs:0,1.41441696474074)
+--(axis cs:0,1.93081854230899);
+
+\path [draw=black, fill opacity=0] (axis cs:1,1.41441696474074)
+--(axis cs:1,1.93081854230899);
+
+\path [draw=black, fill opacity=0] (axis cs:-14.5,0)
+--(axis cs:524.5,0);
+
+\path [draw=black, fill opacity=0] (axis cs:-14.5,1)
+--(axis cs:524.5,1);
+
+\nextgroupplot[
+height=\figureheight,
+tick align=outside,
+tick pos=left,
+title={All values, State x_2},
+width=\figurewidth,
+x grid style={lightgray!92.02614379084967!black},
+xmin=-14.5, xmax=524.5,
+y grid style={lightgray!92.02614379084967!black},
+ymin=-0.854269517519204, ymax=-0.517898105323027
+]
+\addplot [semithick, color0, mark=x, mark size=3, mark options={solid}, forget plot]
+table [row sep=\\]{%
+10	-0.533187714968308 \\
+25	-0.680731167293085 \\
+50	-0.738019970705357 \\
+75	-0.765690350290486 \\
+100	-0.782687580201338 \\
+150	-0.799728231261343 \\
+200	-0.80134872314223 \\
+250	-0.808518560644783 \\
+300	-0.809058478435068 \\
+350	-0.821210421522976 \\
+400	-0.816983380964665 \\
+500	-0.824466901180041 \\
+};
+\addplot [semithick, color1, mark=*, mark size=3, mark options={solid}, forget plot]
+table [row sep=\\]{%
+10	-0.660732267253851 \\
+25	-0.76130366332359 \\
+50	-0.796312303674052 \\
+75	-0.811584670897067 \\
+100	-0.823430818482048 \\
+150	-0.832566715668919 \\
+200	-0.827682411140213 \\
+250	-0.830619218266413 \\
+300	-0.830474178776134 \\
+350	-0.83825430546141 \\
+400	-0.834109006519364 \\
+500	-0.838979907873923 \\
+};
+\addplot [semithick, color2, mark=triangle*, mark size=3, mark options={solid}, forget plot]
+table [row sep=\\]{%
+10	-0.826082010639086 \\
+25	-0.826082010639086 \\
+50	-0.826082010639086 \\
+75	-0.826082010639086 \\
+100	-0.826082010639086 \\
+150	-0.826082010639086 \\
+200	-0.826082010639086 \\
+250	-0.826082010639086 \\
+300	-0.826082010639086 \\
+350	-0.826082010639086 \\
+400	-0.826082010639086 \\
+500	-0.826082010639086 \\
+};
+\path [draw=black, fill opacity=0] (axis cs:0,-0.854269517519204)
+--(axis cs:0,-0.517898105323027);
+
+\path [draw=black, fill opacity=0] (axis cs:1,-0.854269517519204)
+--(axis cs:1,-0.517898105323027);
+
+\path [draw=black, fill opacity=0] (axis cs:-14.5,0)
+--(axis cs:524.5,0);
+
+\path [draw=black, fill opacity=0] (axis cs:-14.5,1)
+--(axis cs:524.5,1);
+
+\end{groupplot}
+
+\end{tikzpicture}
