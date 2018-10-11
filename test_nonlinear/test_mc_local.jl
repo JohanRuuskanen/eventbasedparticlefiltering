@@ -11,7 +11,7 @@ using StatsBase
 using Distributions
 
 #Add workers
-W = 12
+W = 24
 addprocs(W)
 
 @everywhere begin
@@ -44,11 +44,11 @@ addprocs(W)
         X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, res_ebpf, fail_ebpf = ebpf(y, sys, par, δ)
         X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, res_eapf, fail_eapf = eapf(y, sys, par, δ)
 
-        xh_ebpf = zeros(nx, T)
-        xh_eapf = zeros(nx, T)
+        xh_ebpf = zeros(1, T)
+        xh_eapf = zeros(1, T)
 
-        for k = 1:nx
-            xh_ebpf[k, :] = sum(diag(W_ebpf'*X_ebpf[:, k, :]), 2)
+        for k = 1:1
+            xh_ebpf[k, :] = sum(diag(W_ebpf'*X_ebpf[:, k, :]), 3)
             xh_eapf[k, :] = sum(diag(W_eapf'*X_eapf[:, k, :]), 2)
         end
 
@@ -74,9 +74,9 @@ end
 """
 Run simulation
 """
-N = [200]
-Δ = [1 1 2 3 4 5]
-sims = 101
+N = [100 250 500 1000]
+Δ = [0]
+sims = 100
 
 path = "/var/tmp/johanr/"
 folder = "/data"

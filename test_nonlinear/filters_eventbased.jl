@@ -296,7 +296,7 @@ function eapf(y, sys, par, δ)
                 if res[k] == 1
                     # Predictive likelihood
                     pL = 0
-                    for j = 1:M
+                    for j = 2:M
                         pL += pdf(q_aux_list[i], yh[j, :])
                     end
 
