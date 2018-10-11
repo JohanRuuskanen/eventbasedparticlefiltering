@@ -9,7 +9,7 @@ include("../src/misc.jl")
 T = 1000
 N = 200
 
-δ = 5
+δ = 2
 
 w = Normal(0.0, 1)
 v = Normal(0.0, 0.1)

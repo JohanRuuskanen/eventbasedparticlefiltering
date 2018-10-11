@@ -1,0 +1,157 @@
+% This file was created by matplotlib2tikz v0.6.18.
+\begin{tikzpicture}
+
+\definecolor{color1}{rgb}{0.83921568627451,0.152941176470588,0.156862745098039}
+\definecolor{color0}{rgb}{1,0.498039215686275,0.0549019607843137}
+\definecolor{color3}{rgb}{0.12156862745098,0.466666666666667,0.705882352941177}
+\definecolor{color2}{rgb}{0.580392156862745,0.403921568627451,0.741176470588235}
+
+\begin{groupplot}[group style={group size=2 by 1}]
+\nextgroupplot[
+height=\figureheight,
+legend cell align={left},
+legend entries={{BPF},{APF},{EBSE},{Kalman}},
+legend style={at={(0.03,0.97)}, anchor=north west, draw=white!80.0!black},
+tick align=outside,
+tick pos=left,
+title={State x_1},
+width=\figurewidth,
+x grid style={lightgray!92.02614379084967!black},
+xmajorgrids,
+xmin=-0.2, xmax=4.2,
+y grid style={lightgray!92.02614379084967!black},
+ymajorgrids,
+ymin=-0.16030241192031, ymax=4.54267063212
+]
+\addlegendimage{no markers, color0}
+\addlegendimage{no markers, color1}
+\addlegendimage{no markers, color2}
+\addlegendimage{no markers, color3}
+\addplot [semithick, color0, mark=*, mark size=3, mark options={solid,draw=black}]
+table [row sep=\\]{%
+0	0.0544176158848425 \\
+0.4	0.0720368647152736 \\
+0.8	0.157637202095797 \\
+1.2	0.331012660733628 \\
+1.6	0.608810071383568 \\
+2	0.989770882283455 \\
+2.4	1.47204966064416 \\
+2.8	2.04916503533651 \\
+3.2	2.71573580633734 \\
+3.6	3.4616505502574 \\
+4	4.26659878352118 \\
+};
+\addplot [semithick, color1, mark=square*, mark size=3, mark options={solid,draw=black}]
+table [row sep=\\]{%
+0	0.0536298349091188 \\
+0.4	0.0710328296232531 \\
+0.8	0.156050196507751 \\
+1.2	0.327752363848705 \\
+1.6	0.602239502497103 \\
+2	0.977380644684942 \\
+2.4	1.45156455818874 \\
+2.8	2.01909725262015 \\
+3.2	2.67654182137992 \\
+3.6	3.41492700446221 \\
+4	4.20380504531145 \\
+};
+\addplot [semithick, color2, mark=diamond*, mark size=3, mark options={solid,draw=black}]
+table [row sep=\\]{%
+0	0.0534690900815227 \\
+0.4	0.0707954956709999 \\
+0.8	0.156710024784995 \\
+1.2	0.332830788801224 \\
+1.6	0.616687043877918 \\
+2	1.00609070087969 \\
+2.4	1.49617737247299 \\
+2.8	2.08806063850576 \\
+3.2	2.76744573125788 \\
+3.6	3.52075267613359 \\
+4	4.32889913011817 \\
+};
+\addplot [semithick, color3, dashed]
+table [row sep=\\]{%
+0	0.0534690900815227 \\
+0.4	0.0534690900815227 \\
+0.8	0.0534690900815227 \\
+1.2	0.0534690900815227 \\
+1.6	0.0534690900815227 \\
+2	0.0534690900815227 \\
+2.4	0.0534690900815227 \\
+2.8	0.0534690900815227 \\
+3.2	0.0534690900815227 \\
+3.6	0.0534690900815227 \\
+4	0.0534690900815227 \\
+};
+\nextgroupplot[
+height=\figureheight,
+tick align=outside,
+tick pos=left,
+title={State x_2},
+width=\figurewidth,
+x grid style={lightgray!92.02614379084967!black},
+xmajorgrids,
+xmin=-0.2, xmax=4.2,
+y grid style={lightgray!92.02614379084967!black},
+ymajorgrids,
+ymin=0.0542713022998245, ymax=0.459126972805348
+]
+\addplot [semithick, color0, mark=*, mark size=3, mark options={solid,draw=black}, forget plot]
+table [row sep=\\]{%
+0	0.0740325593004524 \\
+0.4	0.0899065471787689 \\
+0.8	0.12816090584755 \\
+1.2	0.167541580555184 \\
+1.6	0.206417847998673 \\
+2	0.245075681082697 \\
+2.4	0.28435602315645 \\
+2.8	0.323603117548723 \\
+3.2	0.361618651491384 \\
+3.6	0.400260203754782 \\
+4	0.440724442327825 \\
+};
+\addplot [semithick, color1, mark=square*, mark size=3, mark options={solid,draw=black}, forget plot]
+table [row sep=\\]{%
+0	0.0728956865383657 \\
+0.4	0.0884486040235104 \\
+0.8	0.126346239846279 \\
+1.2	0.165137413649071 \\
+1.6	0.203477606831949 \\
+2	0.241384610363863 \\
+2.4	0.279778571827475 \\
+2.8	0.318681888538103 \\
+3.2	0.355945879561551 \\
+3.6	0.394642363956459 \\
+4	0.434297929973313 \\
+};
+\addplot [semithick, color2, mark=diamond*, mark size=3, mark options={solid,draw=black}, forget plot]
+table [row sep=\\]{%
+0	0.0726738327773483 \\
+0.4	0.0881499239375584 \\
+0.8	0.126347940934431 \\
+1.2	0.165773450555469 \\
+1.6	0.205213650745467 \\
+2	0.244119761143036 \\
+2.4	0.283475346485285 \\
+2.8	0.323385194887181 \\
+3.2	0.361106126718268 \\
+3.6	0.400181477490452 \\
+4	0.440094702055293 \\
+};
+\addplot [semithick, color3, dashed, forget plot]
+table [row sep=\\]{%
+0	0.0726738327773483 \\
+0.4	0.0726738327773483 \\
+0.8	0.0726738327773483 \\
+1.2	0.0726738327773483 \\
+1.6	0.0726738327773483 \\
+2	0.0726738327773483 \\
+2.4	0.0726738327773483 \\
+2.8	0.0726738327773483 \\
+3.2	0.0726738327773483 \\
+3.6	0.0726738327773483 \\
+4	0.0726738327773483 \\
+};
+\end{groupplot}
+
+\end{tikzpicture}

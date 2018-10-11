@@ -5,18 +5,18 @@ using PyPlot
 include("/local/home/johanr/Projects/EBPF/src/misc.jl")
 include("/local/home/johanr/Projects/EBPF/src/pyplot2tikz.jl")
 
-read_new = false
+read_new = true
 #N = [10 25 50 75 100 150 200 250 300 350 400 500]
 #Δ = [4.0]
 #path = "/local/home/johanr/Projects/EBPF/test_linear/data/test_run_over_N"
 
-N = [500]
-Δ = [0 0.4 0.8 1.2 1.6 2.0 2.4 2.8 3.2 3.6 4.0]
-path = "/local/home/johanr/Projects/EBPF/test_linear/data/test_linear_system"
+N = [200]
+Δ = [0 1 2 3 4 5]
+path = "/local/home/johanr/Projects/EBPF/test_nonlinear/data/test_run_small"
 
 m = length(N)
 n = length(Δ)
-k = 1000
+k = 100
 
 function calc_recursive(M, n, y)
     T = size(y, 2)
@@ -31,26 +31,18 @@ end
 
 if read_new
     Err_bpf = Dict{String,Array{Float64}}(
-        "mean" => zeros(m, n, 2),
-        "mean_g1" => zeros(m, n, 2),
+        "mean" => zeros(m, n, 1),
+        "mean_g1" => zeros(m, n, 1),
         "Neff" => zeros(m, n),
         "fail" => zeros(m, n),
         "res" => zeros(m, n)
     )
     Err_apf = Dict{String,Array{Float64}}(
-        "mean" => zeros(m, n, 2),
-        "mean_g1" => zeros(m, n, 2),
+        "mean" => zeros(m, n, 1),
+        "mean_g1" => zeros(m, n, 1),
         "Neff" => zeros(m, n),
         "fail" => zeros(m, n),
         "res" => zeros(m, n)
-    )
-    Err_ebse = Dict{String,Array{Float64}}(
-        "mean" => zeros(n, 2),
-        "mean_g1" => zeros(n, 2)
-    )
-
-    Err_kalman = Dict{String,Array{Float64}}(
-        "mean" => zeros(2, 1)
     )
 
     for i1 = 1:m
@@ -62,11 +54,8 @@ if read_new
             counters = Dict{String,Int64}(
                 "ebpf" => 0,
                 "eapf" => 0,
-                "ebse" => 0,
                 "ebpf_g1" => 0,
                 "eapf_g1" => 0,
-                "ebse_g1" => 0,
-                "kalman" => 0
             )
 
 
@@ -110,28 +99,6 @@ if read_new
                 Err_apf["mean_g1"][i1, i2, :], counters["eapf_g1"] =
                     calc_recursive(Err_apf["mean_g1"][i1, i2, :], counters["eapf_g1"],
                                     apf_measure[:, idx_apf].^2)
-
-                if i1 == 1
-                    if i2 == 1
-                        Err_kalman["mean"], counters["kalman"] =
-                            calc_recursive(Err_kalman["mean"], counters["kalman"],
-                                            E[i3]["err_kal"].^2)
-                    end
-
-                    ebse_measure = E[i3]["err_ebse"]
-                    Γ_ebse = E[i3]["trig_ebse"]
-
-                    idx_ebse = find(x -> x == 1, Γ_ebse)
-
-                    Err_ebse["mean"][i2, :], counters["ebse"] =
-                        calc_recursive(Err_ebse["mean"][i2, :], counters["ebse"],
-                                        ebse_measure.^2)
-
-                    Err_ebse["mean_g1"][i2, :], counters["ebse_g1"] =
-                        calc_recursive(Err_ebse["mean_g1"][i2, :], counters["ebse_g1"],
-                                        ebse_measure[:, idx_ebse].^2)
-
-                end
             end
 
             Err_bpf["Neff"][i1, i2] /= 1000 * k
@@ -152,60 +119,42 @@ N_lags = 1
 
 fig1 = figure(1)
 clf()
-subplot(1, 2, 1)
 title("State x_1")
-m = [Err_bpf["mean"][N_lags, :, 1],
-     Err_apf["mean"][N_lags, :, 1],
-     Err_ebse["mean"][:, 1],
-     Err_kalman["mean"][1]]
+m = [Err_bpf["mean"][N_lags, :, 1], Err_apf["mean"][N_lags, :, 1]]
 plot(Δ[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[3], "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[4]*ones(n), "C0--")
 legend(["BPF", "APF", "EBSE", "Kalman"])
 grid(true)
-subplot(1, 2, 2)
-title("State x_2")
-m = [Err_bpf["mean"][N_lags, :, 2],
-     Err_apf["mean"][N_lags, :, 2],
-     Err_ebse["mean"][:, 2],
-     Err_kalman["mean"][2]]
-plot(Δ[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[3], "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[4]*ones(n), "C0--")
-grid(true)
-savetikz("../../nice_plots/mse_all.tex", fig=fig1)
 
 fig2 = figure(2)
 clf()
-subplot(1, 2, 1)
 title("State x_1")
-m = [Err_bpf["mean_g1"][N_lags, :, 1],
-     Err_apf["mean_g1"][N_lags, :, 1],
-     Err_ebse["mean_g1"][:, 1],
-     Err_kalman["mean"][1]]
+m = [Err_bpf["mean_g1"][N_lags, :, 1], Err_apf["mean_g1"][N_lags, :, 1]]
 plot(Δ[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[3], "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[4]*ones(n), "C0--")
 legend(["BPF", "APF", "EBSE", "Kalman"])
 grid(true)
-subplot(1, 2, 2)
-title("State x_2")
-m = [Err_bpf["mean_g1"][N_lags, :, 2],
-     Err_apf["mean_g1"][N_lags, :, 2],
-     Err_ebse["mean_g1"][:, 2],
-     Err_kalman["mean"][2]]
-plot(Δ[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[3], "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[4]*ones(n), "C0--")
-grid(true)
-savetikz("../../nice_plots/mse_g1.tex", fig=fig2)
+
+fig3 = figure(3)
+clf()
+subplot(3, 1, 1)
+title("Effective sample size")
+plot(Δ[:], Err_bpf["Neff"][N_lags, :], "C0x-")
+plot(Δ[:], Err_apf["Neff"][N_lags, :], "C1o-")
+legend(["BPF", "APF"])
+subplot(3, 1, 2)
+title("Number of failures")
+plot(Δ[:], Err_bpf["fail"][N_lags, :], "C0x-")
+plot(Δ[:], Err_apf["fail"][N_lags, :], "C1o-")
+legend(["BPF", "APF"])
+subplot(3, 1, 3)
+title("Triggered resamples")
+plot(Δ[:], Err_bpf["res"][N_lags, :], "C0x-")
+plot(Δ[:], Err_apf["res"][N_lags, :], "C1o-")
+legend(["BPF", "APF"])
 
 #=
-fig3 = figure(3)
+fig3 = figure(4)
 clf()
 subplot(1, 2, 1)
 title("All values, State x_1")
@@ -229,7 +178,7 @@ plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 #plot(N[:], m[4]*ones(length(N)), "r--")
 
-fig4 = figure(4)
+fig4 = figure(5)
 clf()
 subplot(1, 2, 1)
 title("Measurement values, State x_1")
@@ -253,7 +202,7 @@ plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[4]*ones(length(N)), "C0--")
 
-fig5 = figure(5)
+fig5 = figure(6)
 clf()
 subplot(3, 1, 1)
 title("Effective sample size")
