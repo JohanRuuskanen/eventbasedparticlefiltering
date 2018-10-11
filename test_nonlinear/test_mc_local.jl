@@ -25,21 +25,20 @@ addprocs(W)
     # Parameters
     T = 1000
 
-    A = [0.8 1; 0 0.95]
-    C = [0.7 0.6]
+    w = Normal(0.0, 1)
+    v = Normal(0.0, 0.1)
 
-    Q = 0.1*eye(2)
-    R = 0.01*eye(1)
+    f(x, k) = x/2 + 25*x./(1 + x.^2) + 8*cos(1.2*k)
+    h(x, k) = x.^2/20
+
+    sys = sys_params(f, h, w, v, T, [1, 1])
+    par = pf_params(N)
 
     function run_filters(idx, N, δ)
 
         print("Running sim: $(idx[1]) $(idx[2]) $(idx[3])\n")
 
-        sys = lin_sys_params(A, C, Q, R, T)
-        x, y = sim_lin_sys(sys)
-
-        nx = size(A, 1)
-        ny = size(C, 1)
+        x, y = sim_sys(sys)
 
         # For estimation
         par = pf_params(N)
@@ -47,21 +46,6 @@ addprocs(W)
         # Eventbased implementations
         X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, res_ebpf, fail_ebpf = ebpf(y, sys, par, δ)
         X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, res_eapf, fail_eapf = eapf(y, sys, par, δ)
-
-        if idx[1] == 1 && idx[2] == 1
-            xh_kal, P_kal = kalman_filter(y, sys)
-            err_kal = x - xh_kal
-        else
-            err_kal = [-1.0]
-        end
-
-        if idx[1] == 1
-            xh_ebse, P_ebse, Z_ebse, Γ_ebse = ebse(y, sys, δ)
-            err_ebse = x - xh_ebse
-        else
-            err_ebse = [-1.0]
-            Γ_ebse = [-1.0]
-        end
 
         xh_ebpf = zeros(nx, T)
         xh_eapf = zeros(nx, T)
@@ -75,19 +59,18 @@ addprocs(W)
         err_eapf = x - xh_eapf
 
         return Dict{String,Array{Float64}}(
+                    "err_ebpf" => err_ebpf,
+                    "err_eapf" => err_eapf,
+                    "trig_ebpf" => Γ_ebpf,
+                    "trig_eapf" => Γ_eapf,
                     "Neff_ebpf" => Neff_ebpf,
                     "Neff_eapf" => Neff_eapf,
                     "res_ebpf" => res_ebpf,
                     "res_eapf" => res_eapf,
                     "fail_ebpf" => fail_ebpf,
-                    "fail_eapf" => fail_eapf,
-                    "err_ebpf" => err_ebpf,
-                    "err_eapf" => err_eapf,
-                    "err_ebse" => err_ebse,
-                    "trig_ebpf" => Γ_ebpf,
-                    "trig_eapf" => Γ_eapf,
-                    "trig_ebse" => Γ_ebse,
-                    "err_kal" => err_kal)
+                    "fail_eapf" => fail_eapf
+                   )
+
     end
 end
 
