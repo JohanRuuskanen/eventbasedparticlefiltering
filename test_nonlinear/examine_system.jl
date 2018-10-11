@@ -6,10 +6,10 @@ include("filters.jl")
 include("filters_eventbased.jl")
 include("../src/misc.jl")
 
-T = 1000
-N = 200
+T = 10000
+N = 100
 
-δ = 2
+δ = 5
 
 w = Normal(0.0, 1)
 v = Normal(0.0, 0.1)

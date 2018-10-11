@@ -250,11 +250,13 @@ function eapf(y, sys, par, δ)
 
                 wh = zeros(M)
                 for j = 1:M
-                    wh[j] = pdf(MvNormal(μ[2], Σ[2, 2]), yh[j, :])
+                    wh[j] = log(pdf(MvNormal(μ[2], Σ[2, 2]), yh[j, :]))
                 end
 
-                if sum(wh) > 0
-                    wh = wh ./ sum(wh)
+                wh_max = maximum(wh)
+                if wh_max > -Inf
+                    wh_tmp = exp.(wh - wh_max*ones(M))
+                    wh = wh_tmp ./ sum(wh_tmp)
                 else
                     println("Bad conditioned weights for Mixture Gaussian; resetting to uniform")
                     wh = 1 / M * ones(M)
