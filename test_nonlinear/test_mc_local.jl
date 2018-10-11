@@ -11,7 +11,7 @@ using StatsBase
 using Distributions
 
 #Add workers
-W = 23
+W = 12
 addprocs(W)
 
 @everywhere begin
@@ -94,9 +94,9 @@ end
 """
 Run simulation
 """
-N = [500]
-Δ = [0 0.8 1.6 2.4 3.2 4.0]
-sims = 1000
+N = [200]
+Δ = [0 1 2 3 4 5]
+sims = 100
 
 path = "/var/tmp/johanr/"
 folder = "/data"

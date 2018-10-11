@@ -6,8 +6,8 @@ include("filters.jl")
 include("filters_eventbased.jl")
 include("../src/misc.jl")
 
-T = 200
-N = 200
+T = 1000
+N = 500
 
 δ = 5
 
