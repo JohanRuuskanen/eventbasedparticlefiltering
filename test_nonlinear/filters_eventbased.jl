@@ -114,6 +114,8 @@ function eapf(y, sys, par, δ)
     nx = sys.nd[1]
     ny = sys.nd[2]
 
+    N = par.N
+
     X = zeros(par.N, nx, sys.T)
     W = zeros(par.N, sys.T)
 	V = zeros(par.N, sys.T)
@@ -138,6 +140,7 @@ function eapf(y, sys, par, δ)
     fail = zeros(T)
 
     N_T = N/2
+
     # === For approximating the uniform distribution
     # number of approximation points and their spacing
     M = 20 #ceil(2 * δ) + 1
@@ -189,7 +192,7 @@ function eapf(y, sys, par, δ)
                 V[i, k-1] = W[i, k-1] * predLh
             end
         end
-	    V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
+	V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
 
         Neff[k] = 1/sum(V[:, k-1].^2)
         if Neff[k] < N_T 

@@ -18,9 +18,9 @@ addprocs(W)
     using StatsBase
     using Distributions
 
-    include("../src/misc.jl")
-    include("filters.jl")
-    include("filters_eventbased.jl")
+    include("/var/tmp/johanr/eb_apf/src/misc.jl")
+    include("/var/tmp/johanr/eb_apf/test_nonlinear/filters.jl")
+    include("/var/tmp/johanr/eb_apf/test_nonlinear/filters_eventbased.jl")
 
     # Parameters
     T = 1000
@@ -32,15 +32,12 @@ addprocs(W)
     h(x, k) = x.^2/20
 
     sys = sys_params(f, h, w, v, T, [1, 1])
-    par = pf_params(N)
 
     function run_filters(idx, N, δ)
 
         print("Running sim: $(idx[1]) $(idx[2]) $(idx[3])\n")
 
         x, y = sim_sys(sys)
-
-        # For estimation
         par = pf_params(N)
 
         # Eventbased implementations
@@ -78,8 +75,8 @@ end
 Run simulation
 """
 N = [200]
-Δ = [0 1 2 3 4 5]
-sims = 100
+Δ = [1 1 2 3 4 5]
+sims = 101
 
 path = "/var/tmp/johanr/"
 folder = "/data"
