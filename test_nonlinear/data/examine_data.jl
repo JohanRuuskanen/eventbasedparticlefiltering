@@ -6,17 +6,17 @@ include("/local/home/johanr/Projects/EBPF/src/misc.jl")
 include("/local/home/johanr/Projects/EBPF/src/pyplot2tikz.jl")
 
 read_new = true
-N = [100 250 500 1000]
-Δ = [5]
-path = "/local/home/johanr/Projects/EBPF/test_nonlinear/data/test_run_over_N_small_delta5"
+#N = [100 250 500 1000]
+#Δ = [5]
+#path = "/local/home/johanr/Projects/EBPF/test_nonlinear/data/test_run_over_N_small_delta5"
 
-#N = [200]
-#Δ = [0 1 2 3 4 5]
-#path = "/local/home/johanr/Projects/EBPF/test_nonlinear/data/test_run_small"
+N = [250]
+Δ = [0 1 2 3 4 5 6 7 8 9 10]
+path = "/local/home/johanr/Projects/EBPF/test_nonlinear/data/test_run_over_D"
 
 m = length(N)
 n = length(Δ)
-k = 100
+k = 1000
 
 function calc_recursive(M, n, y)
     T = size(y, 2)
@@ -125,7 +125,7 @@ end
 
 N_lags = 1
 Δ_lags = 1
-#=
+
 fig1 = figure(1)
 clf()
 title("State x_1")
@@ -161,8 +161,8 @@ title("Triggered resamples")
 plot(Δ[:], Err_bpf["res"][N_lags, :], "C0x-")
 plot(Δ[:], Err_apf["res"][N_lags, :], "C1o-")
 legend(["BPF", "APF"])
-=#
 
+#=
 fig3 = figure(4)
 clf()
 title("All values, State x_1")
@@ -201,3 +201,4 @@ title("Measurement values")
 plot(N[:], Err_bpf["trig"][:, Δ_lags], "C0x-")
 plot(N[:], Err_apf["trig"][:, Δ_lags], "C1o-")
 legend(["BPF", "APF"])
+=#

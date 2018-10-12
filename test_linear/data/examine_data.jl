@@ -6,13 +6,13 @@ include("/local/home/johanr/Projects/EBPF/src/misc.jl")
 include("/local/home/johanr/Projects/EBPF/src/pyplot2tikz.jl")
 
 read_new = true
-N = [10 25 50 75 100 150 200 250 300 350 400 500]
-Δ = [4.0]
-path = "/local/home/johanr/Projects/EBPF/test_linear/data/test_results_over_N"
+#N = [10 25 50 75 100 150 200 250 300 350 400 500]
+#Δ = [4.0]
+#path = "/local/home/johanr/Projects/EBPF/test_linear/data/test_results_over_N"
 
-#N = [500]
-#Δ = [0 0.4 0.8 1.2 1.6 2.0 2.4 2.8 3.2 3.6 4.0]
-#path = "/local/home/johanr/Projects/EBPF/test_linear/data/test_linear_system"
+N = [500]
+Δ = [0 0.4 0.8 1.2 1.6 2.0 2.4 2.8 3.2 3.6 4.0]
+path = "/local/home/johanr/Projects/EBPF/test_linear/data/test_linear_system"
 
 m = length(N)
 n = length(Δ)
@@ -150,11 +150,10 @@ end
 N_lags = 1
 Δ_lags = 1
 
-#=
 fig1 = figure(1)
 clf()
 subplot(1, 2, 1)
-title("State x_1")
+title("x1")
 m = [Err_bpf["mean"][N_lags, :, 1],
      Err_apf["mean"][N_lags, :, 1],
      Err_ebse["mean"][:, 1],
@@ -166,7 +165,7 @@ plot(Δ[:], m[4]*ones(n), "C0--")
 legend(["BPF", "APF", "EBSE", "Kalman"])
 grid(true)
 subplot(1, 2, 2)
-title("State x_2")
+title("x2")
 m = [Err_bpf["mean"][N_lags, :, 2],
      Err_apf["mean"][N_lags, :, 2],
      Err_ebse["mean"][:, 2],
@@ -181,7 +180,7 @@ savetikz("../../nice_plots/mse_all.tex", fig=fig1)
 fig2 = figure(2)
 clf()
 subplot(1, 2, 1)
-title("State x_1")
+title("x1")
 m = [Err_bpf["mean_g1"][N_lags, :, 1],
      Err_apf["mean_g1"][N_lags, :, 1],
      Err_ebse["mean_g1"][:, 1],
@@ -193,7 +192,7 @@ plot(Δ[:], m[4]*ones(n), "C0--")
 legend(["BPF", "APF", "EBSE", "Kalman"])
 grid(true)
 subplot(1, 2, 2)
-title("State x_2")
+title("x2")
 m = [Err_bpf["mean_g1"][N_lags, :, 2],
      Err_apf["mean_g1"][N_lags, :, 2],
      Err_ebse["mean_g1"][:, 2],
@@ -204,12 +203,12 @@ plot(Δ[:], m[3], "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[4]*ones(n), "C0--")
 grid(true)
 savetikz("../../nice_plots/mse_g1.tex", fig=fig2)
-=#
 
+#=
 fig3 = figure(3)
 clf()
 subplot(1, 2, 1)
-title("All values, State x_1")
+title("State x1")
 m = [log.(Err_bpf["mean"][:, Δ_lags, 1]),
      log.(Err_apf["mean"][:, Δ_lags, 1]),
      log.(Err_ebse["mean"][Δ_lags, 1]),
@@ -217,10 +216,11 @@ m = [log.(Err_bpf["mean"][:, Δ_lags, 1]),
 plot(N[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-#plot(N[:], m[4]*ones(length(N)), "r--")
+plot(N[:], m[4]*ones(length(N)), "C1--")
+grid(true)
 legend(["BPF", "APF", "EBSE", "Kalman"])
 subplot(1, 2, 2)
-title("All values, State x_2")
+title("State x2")
 m = [log.(Err_bpf["mean"][:, Δ_lags, 2]),
      log.(Err_apf["mean"][:, Δ_lags, 2]),
      log.(Err_ebse["mean"][Δ_lags, 2]),
@@ -228,12 +228,13 @@ m = [log.(Err_bpf["mean"][:, Δ_lags, 2]),
 plot(N[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-#plot(N[:], m[4]*ones(length(N)), "r--")
+plot(N[:], m[4]*ones(length(N)), "C0--")
+grid(true)
 
 fig4 = figure(4)
 clf()
 subplot(1, 2, 1)
-title("Measurement values, State x_1")
+title("State x1")
 m = [log.(Err_bpf["mean_g1"][:, Δ_lags, 1]),
      log.(Err_apf["mean_g1"][:, Δ_lags, 1]),
      log.(Err_ebse["mean_g1"][Δ_lags, 1]),
@@ -242,9 +243,10 @@ plot(N[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[4]*ones(length(N)), "C0--")
+grid(true)
 legend(["BPF", "APF", "EBSE", "Kalman"])
 subplot(1, 2, 2)
-title("Measurement values, State x_2")
+title("State x2")
 m = [log.(Err_bpf["mean_g1"][:, Δ_lags, 2]),
      log.(Err_apf["mean_g1"][:, Δ_lags, 2]),
      log.(Err_ebse["mean_g1"][Δ_lags, 2]),
@@ -253,6 +255,7 @@ plot(N[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[4]*ones(length(N)), "C0--")
+grid(true)
 
 fig5 = figure(5)
 clf()
@@ -271,3 +274,4 @@ title("Triggered resamples")
 plot(N[:], Err_bpf["res"][:, Δ_lags], "C0x-")
 plot(N[:], Err_apf["res"][:, Δ_lags], "C1o-")
 legend(["BPF", "APF"])
+=#
