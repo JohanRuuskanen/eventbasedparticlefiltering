@@ -7,8 +7,8 @@ include("/local/home/johanr/Projects/EBPF/src/pyplot2tikz.jl")
 
 read_new = true
 N = [100 250 500 1000]
-Δ = [0]
-path = "/local/home/johanr/Projects/EBPF/test_nonlinear/data/test_run_over_N_small"
+Δ = [5]
+path = "/local/home/johanr/Projects/EBPF/test_nonlinear/data/test_run_over_N_small_delta5"
 
 #N = [200]
 #Δ = [0 1 2 3 4 5]
@@ -35,14 +35,16 @@ if read_new
         "mean_g1" => zeros(m, n, 1),
         "Neff" => zeros(m, n),
         "fail" => zeros(m, n),
-        "res" => zeros(m, n)
+        "res" => zeros(m, n),
+        "trig" => zeros(m, n)
     )
     Err_apf = Dict{String,Array{Float64}}(
         "mean" => zeros(m, n, 1),
         "mean_g1" => zeros(m, n, 1),
         "Neff" => zeros(m, n),
         "fail" => zeros(m, n),
-        "res" => zeros(m, n)
+        "res" => zeros(m, n),
+        "trig" => zeros(m, n)
     )
 
     for i1 = 1:m
@@ -77,6 +79,10 @@ if read_new
                 Err_apf["res"][i1, i2] += sum(E[i3]["res_eapf"])
 
 
+                Err_bpf["trig"][i1, i2] += sum(E[i3]["trig_ebpf"])
+                Err_apf["trig"][i1, i2] += sum(E[i3]["trig_eapf"])
+
+
                 if length(bpf_measure) - length(apf_measure) == 0
                     T = size(bpf_measure, 2)
                 else
@@ -109,6 +115,9 @@ if read_new
 
             Err_bpf["res"][i1, i2] /= 1000
             Err_apf["res"][i1, i2] /= 1000
+
+            Err_bpf["trig"][i1, i2] /= 1000
+            Err_apf["trig"][i1, i2] /= 1000
 
         end
     end
@@ -172,18 +181,23 @@ legend(["BPF", "APF", "EBSE", "Kalman"])
 
 fig5 = figure(6)
 clf()
-subplot(3, 1, 1)
+subplot(4, 1, 1)
 title("Effective sample size")
 plot(N[:], Err_bpf["Neff"][:, Δ_lags], "C0x-")
 plot(N[:], Err_apf["Neff"][:, Δ_lags], "C1o-")
 legend(["BPF", "APF"])
-subplot(3, 1, 2)
+subplot(4, 1, 2)
 title("Number of failures")
 plot(N[:], Err_bpf["fail"][:, Δ_lags], "C0x-")
 plot(N[:], Err_apf["fail"][:, Δ_lags], "C1o-")
 legend(["BPF", "APF"])
-subplot(3, 1, 3)
+subplot(4, 1, 3)
 title("Triggered resamples")
 plot(N[:], Err_bpf["res"][:, Δ_lags], "C0x-")
 plot(N[:], Err_apf["res"][:, Δ_lags], "C1o-")
+legend(["BPF", "APF"])
+subplot(4, 1, 4)
+title("Measurement values")
+plot(N[:], Err_bpf["trig"][:, Δ_lags], "C0x-")
+plot(N[:], Err_apf["trig"][:, Δ_lags], "C1o-")
 legend(["BPF", "APF"])
