@@ -69,7 +69,7 @@ function ebpf(y, sys, par, δ)
     res = zeros(T)
     fail = zeros(T)
 
-    N_T = N #/ 2
+    N_T = N / 2
 
     idx = collect(1:N)
     Xr = X[:, 1]
@@ -182,7 +182,7 @@ function eapf(y, sys, par, δ)
     res = zeros(T)
     fail = zeros(T)
 
-    N_T = N#/2
+    N_T = N/2
 
     # === For approximating the uniform distribution
     # number of approximation points and their spacing
@@ -539,7 +539,8 @@ function eapf_mbt(y, sys, par, δ)
 
     for k = 2:T
 
-        y_pred = f(xh[:, k-1], k).^2/20 + Q/20
+        xh[:, k] = f(xh[:, k-1], k)
+        y_pred = xh[:, k].^2/20 + Q/20
         if norm(y_pred - y[:, k]) >= δ
             Γ[k] = 1
             Z[:, k] = y[:, k]
@@ -702,7 +703,9 @@ function eapf_mbt(y, sys, par, δ)
             Neff[k] = 0
         end
 
-        xh[:, k] = sum(W[:, k]'*X[:, 1, k])
+        if Γ[k] == 1
+            xh[:, k] = sum(W[:, k]'*X[:, 1, k])
+        end
     end
 
     return X, W, Z, Γ, Neff, res, fail
