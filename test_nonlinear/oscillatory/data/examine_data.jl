@@ -10,13 +10,20 @@ read_new = true
 #Δ = [5]
 #path = "/local/home/johanr/Projects/EBPF/test_nonlinear/data/test_run_over_N_small_delta5"
 
+#N = [250]
+#Δ = [0 1 2 3 4 5 6 7 8 9 10]
+#path = "/local/home/johanr/Projects/EBPF/test_nonlinear/data/test_run_over_D"
+
 N = [250]
-Δ = [0 1 2 3 4 5 6 7 8 9 10]
-path = "/local/home/johanr/Projects/EBPF/test_nonlinear/data/test_run_over_D"
+Δ = [0 0.2 0.4 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0]
+path = "/local/home/johanr/Projects/EBPF/test_nonlinear/oscillatory/data/test_run_over_smallD"
 
 m = length(N)
 n = length(Δ)
 k = 1000
+
+bpf_var = "bpf2"
+apf_var = "apf2"
 
 function calc_recursive(M, n, y)
     T = size(y, 2)
@@ -63,24 +70,24 @@ if read_new
 
 
             for i3 = 1:k
-                bpf_measure = E[i3]["err_ebpf"]
-                apf_measure = E[i3]["err_eapf"]
+                bpf_measure = E[i3]["err_"*bpf_var]
+                apf_measure = E[i3]["err_"*apf_var]
 
-                Γ_bpf = E[i3]["trig_ebpf"]
-                Γ_apf = E[i3]["trig_eapf"]
+                Γ_bpf = E[i3]["trig_"*bpf_var]
+                Γ_apf = E[i3]["trig_"*apf_var]
 
-                Err_bpf["Neff"][i1, i2] += sum(E[i3]["Neff_ebpf"])
-                Err_apf["Neff"][i1, i2] += sum(E[i3]["Neff_eapf"])
+                Err_bpf["Neff"][i1, i2] += sum(E[i3]["Neff_"*bpf_var])
+                Err_apf["Neff"][i1, i2] += sum(E[i3]["Neff_"*apf_var])
 
-                Err_bpf["fail"][i1, i2] += sum(E[i3]["fail_ebpf"])
-                Err_apf["fail"][i1, i2] += sum(E[i3]["fail_eapf"])
+                Err_bpf["fail"][i1, i2] += 0#sum(E[i3]["fail_"*bpf_var])
+                Err_apf["fail"][i1, i2] += 0#sum(E[i3]["fail_"*apf_var])
 
-                Err_bpf["res"][i1, i2] += sum(E[i3]["res_ebpf"])
-                Err_apf["res"][i1, i2] += sum(E[i3]["res_eapf"])
+                Err_bpf["res"][i1, i2] += sum(E[i3]["res_"*bpf_var])
+                Err_apf["res"][i1, i2] += sum(E[i3]["res_"*apf_var])
 
 
-                Err_bpf["trig"][i1, i2] += sum(E[i3]["trig_ebpf"])
-                Err_apf["trig"][i1, i2] += sum(E[i3]["trig_eapf"])
+                Err_bpf["trig"][i1, i2] += sum(E[i3]["trig_"*bpf_var])
+                Err_apf["trig"][i1, i2] += sum(E[i3]["trig_"*apf_var])
 
 
                 if length(bpf_measure) - length(apf_measure) == 0
@@ -146,20 +153,25 @@ grid(true)
 
 fig3 = figure(3)
 clf()
-subplot(3, 1, 1)
+subplot(4, 1, 1)
 title("Effective sample size")
 plot(Δ[:], Err_bpf["Neff"][N_lags, :], "C0x-")
 plot(Δ[:], Err_apf["Neff"][N_lags, :], "C1o-")
 legend(["BPF", "APF"])
-subplot(3, 1, 2)
+subplot(4, 1, 2)
 title("Number of failures")
 plot(Δ[:], Err_bpf["fail"][N_lags, :], "C0x-")
 plot(Δ[:], Err_apf["fail"][N_lags, :], "C1o-")
 legend(["BPF", "APF"])
-subplot(3, 1, 3)
-title("Triggered resamples")
+subplot(4, 1, 3)
+title("Resamples")
 plot(Δ[:], Err_bpf["res"][N_lags, :], "C0x-")
 plot(Δ[:], Err_apf["res"][N_lags, :], "C1o-")
+legend(["BPF", "APF"])
+subplot(4, 1, 4)
+title("Measurement values")
+plot(Δ[:], Err_bpf["trig"][N_lags, :], "C0x-")
+plot(Δ[:], Err_apf["trig"][N_lags, :], "C1o-")
 legend(["BPF", "APF"])
 
 #=

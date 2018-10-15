@@ -62,7 +62,10 @@ function ebpf(y, sys, par, δ)
     Z = zeros(ny, T)
     Γ = zeros(T)
 
-    X[:, :, 1] = rand(Normal(0, 10), N, nx)
+    X[:, 1, 1] = rand(Normal(500, 10), N)
+    X[:, 2, 1] = rand(Normal(0, 10), N)
+    X[:, 3, 1] = rand(Normal(500, 10), N)
+    X[:, 4, 1] = rand(Normal(0, 10), N)
     W[:, 1] = 1/N .* ones(N, 1)
 
     Neff = zeros(T)
@@ -78,7 +81,8 @@ function ebpf(y, sys, par, δ)
     xh = zeros(nx, T)
 
     for k = 2:T
-        
+        Γ[k] = 1
+
         # Run event kernel, SOD
         if norm(Z[:, k-1] - y[:, k]) >= δ
             Γ[k] = 1
@@ -112,18 +116,18 @@ function ebpf(y, sys, par, δ)
 
         # Propagate
         for i = 1:N
-            X[i, :, k] = f(Xr[i, :], k) + rand(sys.w)
+            X[i, :, k] = f(Xr[i, :]) + sys.B*rand(sys.w)
         end
 
         # Weight
         if Γ[k] == 1
             for i = 1:N
-                W[i, k] = log(Wr[i]) + log(pdf.(sys.v, y[k] - h(X[i, :, k], k)[1]))
+                W[i, k] = log(Wr[i]) + log(pdf(sys.v, y[:, k] - h(X[i, :, k])))
             end
         elseif Γ[k] == 0
             for i = 1:N
-                D = Normal(h(X[i, :, k], k)[1], std(v))
-                W[i, k] = log(Wr[i]) + log(cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ))
+                D = MvNormal(h(X[i, :, k]), cov(v))
+                W[i, k] = log(Wr[i]) + log(cdf(D, Z[:, k] + δ) - cdf(D, Z[:, k] - δ))
             end
         end
 
@@ -411,7 +415,8 @@ function ebpf_mbt(y, sys, par, δ)
 
     for k = 2:T
         
-        y_pred = f(xh[:, k-1], k).^2/20 + var(w)/20
+        xh[:, k] = f(xh[:, k-1], k)
+        y_pred = xh[:, k].^2/20 + var(w)/20
         if norm(y_pred - y[:, k]) >= δ
             Γ[k] = 1
             Z[:, k] = y[:, k]
@@ -470,8 +475,10 @@ function ebpf_mbt(y, sys, par, δ)
             fail[k] = 1
             Neff[k] = 0
         end
-
-        xh[:, k] = sum(W[:, k]'*X[:, 1, k])
+        
+        if Γ[k] == 1
+            xh[:, k] = sum(W[:, k]'*X[:, 1, k])
+        end
 
     end
     return X, W, Z, Γ, Neff, res, fail
