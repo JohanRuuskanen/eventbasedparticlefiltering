@@ -35,14 +35,16 @@ if read_new
         "mean_g1" => zeros(m, n, 2),
         "Neff" => zeros(m, n),
         "fail" => zeros(m, n),
-        "res" => zeros(m, n)
+        "res" => zeros(m, n),
+        "trig" => zeros(m, n)
     )
     Err_apf = Dict{String,Array{Float64}}(
         "mean" => zeros(m, n, 2),
         "mean_g1" => zeros(m, n, 2),
         "Neff" => zeros(m, n),
         "fail" => zeros(m, n),
-        "res" => zeros(m, n)
+        "res" => zeros(m, n),
+        "trig" => zeros(m, n)
     )
     Err_ebse = Dict{String,Array{Float64}}(
         "mean" => zeros(n, 2),
@@ -87,6 +89,8 @@ if read_new
                 Err_bpf["res"][i1, i2] += sum(E[i3]["res_ebpf"])
                 Err_apf["res"][i1, i2] += sum(E[i3]["res_eapf"])
 
+                Err_bpf["trig"][i1, i2] += sum(Γ_bpf)
+                Err_apf["trig"][i1, i2] += sum(Γ_apf)
 
                 if length(bpf_measure) - length(apf_measure) == 0
                     T = size(bpf_measure, 2)
@@ -143,6 +147,9 @@ if read_new
             Err_bpf["res"][i1, i2] /= 1000
             Err_apf["res"][i1, i2] /= 1000
 
+            Err_bpf["trig"][i1, i2] /= 1000
+            Err_apf["trig"][i1, i2] /= 1000
+
         end
     end
 end
@@ -175,7 +182,7 @@ plot(Δ[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[3], "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[4]*ones(n), "C0--")
 grid(true)
-savetikz("../../nice_plots/mse_all.tex", fig=fig1)
+#savetikz("../../nice_plots/mse_all.tex", fig=fig1)
 
 fig2 = figure(2)
 clf()
@@ -202,10 +209,35 @@ plot(Δ[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[3], "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[4]*ones(n), "C0--")
 grid(true)
-savetikz("../../nice_plots/mse_g1.tex", fig=fig2)
+#savetikz("../../nice_plots/mse_g1.tex", fig=fig2)
+
+fig5 = figure(3)
+clf()
+subplot(4, 1, 1)
+title("Effective sample size")
+plot(Δ[:], Err_bpf["Neff"][N_lags, :], "C0x-")
+plot(Δ[:], Err_apf["Neff"][N_lags, :], "C1o-")
+legend(["BPF", "APF"])
+subplot(4, 1, 2)
+title("Number of failures")
+plot(Δ[:], Err_bpf["fail"][N_lags, :], "C0x-")
+plot(Δ[:], Err_apf["fail"][N_lags, :], "C1o-")
+legend(["BPF", "APF"])
+subplot(4, 1, 3)
+title("Resamples")
+plot(Δ[:], Err_bpf["res"][N_lags, :], "C0x-")
+plot(Δ[:], Err_apf["res"][N_lags, :], "C1o-")
+legend(["BPF", "APF"])
+subplot(4, 1, 4)
+title("Triggered values")
+plot(Δ[:], Err_bpf["trig"][N_lags, :], "C0x-")
+plot(Δ[:], Err_apf["trig"][N_lags, :], "C1o-")
+legend(["BPF", "APF"])
+
+
 
 #=
-fig3 = figure(3)
+fig3 = figure(4)
 clf()
 subplot(1, 2, 1)
 title("State x1")
@@ -231,7 +263,7 @@ plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0
 plot(N[:], m[4]*ones(length(N)), "C0--")
 grid(true)
 
-fig4 = figure(4)
+fig4 = figure(5)
 clf()
 subplot(1, 2, 1)
 title("State x1")
@@ -257,7 +289,7 @@ plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0
 plot(N[:], m[4]*ones(length(N)), "C0--")
 grid(true)
 
-fig5 = figure(5)
+fig5 = figure(6)
 clf()
 subplot(3, 1, 1)
 title("Effective sample size")

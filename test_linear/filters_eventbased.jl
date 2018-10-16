@@ -85,8 +85,19 @@ function ebpf(y, sys, par, δ)
             for i = 1:N
                 # There are no general cdf for multivariate distributions, this
                 # only works if y is a scalar
+                #D = Normal((C*X[i, :, k])[1], R[1])
+                #W[i, k] = log(Wr[i]) + log((cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ)))
+            
+                # constrained bayesian state estimation
                 D = Normal((C*X[i, :, k])[1], R[1])
-                W[i, k] = log(Wr[i]) + log((cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ)))
+                #yh = C*(A*X[i, :, k] + rand(MvNormal(zeros(nx), Q))) + rand(MvNormal(zeros(ny), R))
+                yh = C*X[i, :, k] #+ rand(MvNormal(zeros(ny), R))
+                if norm(Z[:, k] -  yh) < δ
+                    W[i, k] = log(Wr[i]) + log(pdf(D, yh[1])) 
+                else
+                    W[i, k] = -Inf
+                end
+
             end
         end
 
@@ -319,9 +330,18 @@ function eapf(y, sys, par, δ)
             end
         else
             for i = 1:par.N
-                # Likelihood
+                # Likelihood 
+                #D = Normal((C*X[i, :, k])[1], R[1])
+                #py = cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ)
+
+                # Likelihood state constrained
                 D = Normal((C*X[i, :, k])[1], R[1])
-                py = cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ)
+                yp = C*X[i, :, k]
+                if norm(Z[:, k] - yp) < δ
+                    py = pdf(D, yp[1])
+                else
+                    py = 0
+                end
 
                 # Propagation
                 px = pdf(MvNormal(A*Xr[i, :], Q), X[i, :, k])
