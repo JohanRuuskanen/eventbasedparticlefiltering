@@ -87,13 +87,13 @@ function ebpf(y, sys, par, δ)
                 # only works if y is a scalar
                 #D = Normal((C*X[i, :, k])[1], R[1])
                 #W[i, k] = log(Wr[i]) + log((cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ)))
-            
+
                 # constrained bayesian state estimation
                 D = Normal((C*X[i, :, k])[1], R[1])
                 #yh = C*(A*X[i, :, k] + rand(MvNormal(zeros(nx), Q))) + rand(MvNormal(zeros(ny), R))
                 yh = C*X[i, :, k] #+ rand(MvNormal(zeros(ny), R))
                 if norm(Z[:, k] -  yh) < δ
-                    W[i, k] = log(Wr[i]) + log(pdf(D, yh[1])) 
+                    W[i, k] = log(Wr[i]) + log(pdf(D, yh[1]))
                 else
                     W[i, k] = -Inf
                 end
@@ -134,10 +134,13 @@ function eapf(y, sys, par, δ)
 
     # === For approximating the uniform distribution
     # number of approximation points and their spacing
-    M = 20 #ceil(2 * δ) + 1
-    L = 2*δ / (M-1)
+    #M = 20 #ceil(2 * δ) + 1
+    #L = 2*δ / (M-1)
+    #Vn = L / sqrt(2)
 
-    Vn = L / sqrt(2)
+    M = 5 #ceil(2 * δ) + 1
+    L = 2*δ / (M)
+    Vn = L / 2
     # ===
 
     nx = size(A, 1)
@@ -330,7 +333,7 @@ function eapf(y, sys, par, δ)
             end
         else
             for i = 1:par.N
-                # Likelihood 
+                # Likelihood
                 #D = Normal((C*X[i, :, k])[1], R[1])
                 #py = cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ)
 
@@ -345,7 +348,7 @@ function eapf(y, sys, par, δ)
 
                 # Propagation
                 px = pdf(MvNormal(A*Xr[i, :], Q), X[i, :, k])
-                
+
                 # proposal distribution
                 q = pdf(q_list[i], X[i, :, k])
 
@@ -355,7 +358,7 @@ function eapf(y, sys, par, δ)
                     pL += pdf(q_aux_list[i], yh[j, :])
                 end
                 pL /= M
-                
+
                 if res[k] == 1
                     W[i, k] = log(Wr[i]) + log(py) + log(px) - log(pL) - log(q)
                 else
@@ -397,7 +400,7 @@ function ebse(y, sys, δ)
 
     # === For approximating the uniform distribution
     # number of approximation points and their spacing
-    M = 20 #ceil(2 * δ) + 1
+    M = 6000 #ceil(2 * δ) + 1
     L = 2*δ / (M-1)
 
     Vn = L / sqrt(2)

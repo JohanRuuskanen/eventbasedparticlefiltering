@@ -1,12 +1,8 @@
 
-Plot result over time-lag
+Restructure the project nicer, e.g. create src with all funcs, create tests with all
+demonstrative tests.
 
-Plot particle geneology over tiem for a measurement 
+Examine effect of lowering M for APF
 
-Examine non-linear, non-gaussian system with another kernel?
-
-
-
-
-
-
+Examine how the posterior distribution looks like for BPF/APF for a controlled
+system with SOD

@@ -12,11 +12,16 @@ read_new = true
 
 N = [500]
 Δ = [0 0.4 0.8 1.2 1.6 2.0 2.4 2.8 3.2 3.6 4.0]
-path = "/local/home/johanr/Projects/EBPF/test_linear/data/test_linear_system"
+path = "/local/home/johanr/Projects/EBPF/test_linear/data/test_small_system"
+
+#N = [500]
+#Δ = [0 0.8 1.6 2.4 3.2 4.0]
+#path = "/local/home/johanr/Projects/EBPF/test_linear/data/test_system_similarcomptime"
 
 m = length(N)
 n = length(Δ)
 k = 1000
+T = 1000
 
 function calc_recursive(M, n, y)
     T = size(y, 2)
@@ -141,14 +146,14 @@ if read_new
             Err_bpf["Neff"][i1, i2] /= 1000 * k
             Err_apf["Neff"][i1, i2] /= 1000 * k
 
-            Err_bpf["fail"][i1, i2] /= 1000
-            Err_apf["fail"][i1, i2] /= 1000
+            Err_bpf["fail"][i1, i2] /= k
+            Err_apf["fail"][i1, i2] /= k
 
-            Err_bpf["res"][i1, i2] /= 1000
-            Err_apf["res"][i1, i2] /= 1000
+            Err_bpf["res"][i1, i2] /= k
+            Err_apf["res"][i1, i2] /= k
 
-            Err_bpf["trig"][i1, i2] /= 1000
-            Err_apf["trig"][i1, i2] /= 1000
+            Err_bpf["trig"][i1, i2] /= k
+            Err_apf["trig"][i1, i2] /= k
 
         end
     end
@@ -156,6 +161,7 @@ end
 
 N_lags = 1
 Δ_lags = 1
+
 
 fig1 = figure(1)
 clf()
@@ -168,7 +174,7 @@ m = [Err_bpf["mean"][N_lags, :, 1],
 plot(Δ[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[3], "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[4]*ones(n), "C0--")
+plot(Δ[:], m[4]*ones(n), "C0--", linewidth=2)
 legend(["BPF", "APF", "EBSE", "Kalman"])
 grid(true)
 subplot(1, 2, 2)
@@ -180,9 +186,9 @@ m = [Err_bpf["mean"][N_lags, :, 2],
 plot(Δ[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[3], "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[4]*ones(n), "C0--")
+plot(Δ[:], m[4]*ones(n), "C0--", linewidth=2)
 grid(true)
-#savetikz("../../nice_plots/mse_all.tex", fig=fig1)
+savetikz("/local/home/johanr/Projects/EBPF/nice_plots/mse_D_all.tex", fig=fig1)
 
 fig2 = figure(2)
 clf()
@@ -195,7 +201,7 @@ m = [Err_bpf["mean_g1"][N_lags, :, 1],
 plot(Δ[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[3], "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[4]*ones(n), "C0--")
+plot(Δ[:], m[4]*ones(n), "C0--", linewidth=2)
 legend(["BPF", "APF", "EBSE", "Kalman"])
 grid(true)
 subplot(1, 2, 2)
@@ -207,37 +213,22 @@ m = [Err_bpf["mean_g1"][N_lags, :, 2],
 plot(Δ[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(Δ[:], m[3], "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(Δ[:], m[4]*ones(n), "C0--")
+plot(Δ[:], m[4]*ones(n), "C0--", linewidth=2)
 grid(true)
-#savetikz("../../nice_plots/mse_g1.tex", fig=fig2)
+savetikz("/local/home/johanr/Projects/EBPF/nice_plots/mse_D_g1.tex", fig=fig2)
 
-fig5 = figure(3)
+fig3 = figure(3)
 clf()
-subplot(4, 1, 1)
-title("Effective sample size")
-plot(Δ[:], Err_bpf["Neff"][N_lags, :], "C0x-")
-plot(Δ[:], Err_apf["Neff"][N_lags, :], "C1o-")
-legend(["BPF", "APF"])
-subplot(4, 1, 2)
-title("Number of failures")
-plot(Δ[:], Err_bpf["fail"][N_lags, :], "C0x-")
-plot(Δ[:], Err_apf["fail"][N_lags, :], "C1o-")
-legend(["BPF", "APF"])
-subplot(4, 1, 3)
-title("Resamples")
-plot(Δ[:], Err_bpf["res"][N_lags, :], "C0x-")
-plot(Δ[:], Err_apf["res"][N_lags, :], "C1o-")
-legend(["BPF", "APF"])
-subplot(4, 1, 4)
-title("Triggered values")
-plot(Δ[:], Err_bpf["trig"][N_lags, :], "C0x-")
-plot(Δ[:], Err_apf["trig"][N_lags, :], "C1o-")
-legend(["BPF", "APF"])
-
+title("Measurement values")
+plot(Δ[:], Err_bpf["trig"][N_lags, :], "C6^-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+legend(["gamma1"])
+grid(true)
+ylim([0, 1100])
+savetikz("/local/home/johanr/Projects/EBPF/nice_plots/metadata_D.tex", fig=fig3)
 
 
 #=
-fig3 = figure(4)
+fig4 = figure(4)
 clf()
 subplot(1, 2, 1)
 title("State x1")
@@ -248,7 +239,7 @@ m = [log.(Err_bpf["mean"][:, Δ_lags, 1]),
 plot(N[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(N[:], m[4]*ones(length(N)), "C1--")
+plot(N[:], m[4]*ones(length(N)), "C0--", linewidth=2)
 grid(true)
 legend(["BPF", "APF", "EBSE", "Kalman"])
 subplot(1, 2, 2)
@@ -260,10 +251,11 @@ m = [log.(Err_bpf["mean"][:, Δ_lags, 2]),
 plot(N[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(N[:], m[4]*ones(length(N)), "C0--")
+plot(N[:], m[4]*ones(length(N)), "C0--", linewidth=2)
 grid(true)
+savetikz("/local/home/johanr/Projects/EBPF/nice_plots/mse_N_all.tex", fig=fig4)
 
-fig4 = figure(5)
+fig5 = figure(5)
 clf()
 subplot(1, 2, 1)
 title("State x1")
@@ -274,7 +266,7 @@ m = [log.(Err_bpf["mean_g1"][:, Δ_lags, 1]),
 plot(N[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(N[:], m[4]*ones(length(N)), "C0--")
+plot(N[:], m[4]*ones(length(N)), "C0--", linewidth=2)
 grid(true)
 legend(["BPF", "APF", "EBSE", "Kalman"])
 subplot(1, 2, 2)
@@ -286,24 +278,15 @@ m = [log.(Err_bpf["mean_g1"][:, Δ_lags, 2]),
 plot(N[:], m[1], "C1o-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[2], "C3s-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
 plot(N[:], m[3]*ones(length(N)), "C4D-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-plot(N[:], m[4]*ones(length(N)), "C0--")
+plot(N[:], m[4]*ones(length(N)), "C0--", linewidth=2)
 grid(true)
+savetikz("/local/home/johanr/Projects/EBPF/nice_plots/mse_N_g1.tex", fig=fig5)
 
-fig5 = figure(6)
+fig6 = figure(6)
 clf()
-subplot(3, 1, 1)
-title("Effective sample size")
-plot(N[:], Err_bpf["Neff"][:, Δ_lags], "C0x-")
-plot(N[:], Err_apf["Neff"][:, Δ_lags], "C1o-")
-legend(["BPF", "APF"])
-subplot(3, 1, 2)
-title("Number of failures")
-plot(N[:], Err_bpf["fail"][:, Δ_lags], "C0x-")
-plot(N[:], Err_apf["fail"][:, Δ_lags], "C1o-")
-legend(["BPF", "APF"])
-subplot(3, 1, 3)
-title("Triggered resamples")
-plot(N[:], Err_bpf["res"][:, Δ_lags], "C0x-")
-plot(N[:], Err_apf["res"][:, Δ_lags], "C1o-")
-legend(["BPF", "APF"])
+plot(N[:], Err_bpf["trig"][:, Δ_lags], "C6^-", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
+ylim([0, 1100])
+legend(["gamma1"])
+grid(true)
+savetikz("/local/home/johanr/Projects/EBPF/nice_plots/metadata_N.tex", fig=fig6)
 =#
