@@ -2,6 +2,7 @@ using JLD
 using PyPlot
 using StatsBase
 using Distributions
+using LinearAlgebra
 
 include("../src/misc.jl")
 include("../src/event_kernels.jl")
@@ -15,8 +16,8 @@ T = 200
 A = [0.8 1; 0 0.95]
 C = [0.7 0.6]
 
-Q = 1*eye(2)
-R = 0.1*eye(1)
+Q = 1*Matrix{Float64}(I,2,2)
+R = 0.1*Matrix{Float64}(I,1,1)
 
 sys = lin_sys_params(A, C, Q, R, T)
 x, y = sim_lin_sys(sys)
@@ -33,8 +34,8 @@ X_apf, W_apf, N_eff_apf = apf(y, sys, par)
 xh_bpf = zeros(nx, T)
 xh_apf = zeros(nx, T)
 for k = 1:nx
-    xh_bpf[k, :] = sum(diag(W_bpf'*X_bpf[:, k, :]), 2)
-    xh_apf[k, :] = sum(diag(W_apf'*X_apf[:, k, :]), 2)
+    xh_bpf[k, :] = sum(diag(W_bpf'*X_bpf[:, k, :]), dims=2)
+    xh_apf[k, :] = sum(diag(W_apf'*X_apf[:, k, :]), dims=2)
 end
 
 err_bpf = x - xh_bpf

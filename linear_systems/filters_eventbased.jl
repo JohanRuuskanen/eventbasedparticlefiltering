@@ -1,5 +1,5 @@
 """
-Event driven particle filters using the MBT kernel
+Event driven particle filters using SOD
 """
 function ebpf(y, sys, par, δ)
     """
@@ -48,12 +48,12 @@ function ebpf(y, sys, par, δ)
             Z[:, k] = Z[:, k-1]
         end
 
-        Neff[k] = 1./sum(W[:, k-1].^2)
+        Neff[k] = 1 ./ sum(W[:, k-1].^2)
         if Neff[k] < N_T
             # Resample using systematic resampling
             idx = collect(1:N)
             wc = cumsum(W[:, k-1])
-            u = (([0:(N-1)] + rand()) / N)[1]
+            u = (([0:(N-1)] .+ rand()) / N)[1]
             c = 1
             for i = 1:N
                 while wc[c] < u[i]
@@ -163,8 +163,8 @@ function eapf(y, sys, par, δ)
 
     idx = collect(1:N)
 
-    q_list = Array{Distribution}(N)
-    q_aux_list = Array{Distribution}(N)
+    q_list = Array{Distribution}(undef, N)
+    q_aux_list = Array{Distribution}(undef, N)
 
     Wr = W[:, 1]
     Xr = X[:, :, 1]
@@ -177,7 +177,6 @@ function eapf(y, sys, par, δ)
     JP_s(S) = [[Q] [Q*C'];
                 [C*Q] [C*Q*C' + S]]
     for k = 2:T
-
         # Run event kernel, SOD
         if norm(Z[:, k-1] - y[:, k]) >= δ
             Γ[k] = 1
@@ -188,7 +187,7 @@ function eapf(y, sys, par, δ)
 
             # Discretisize the uniform distribution, currently only supports
             # dim(y) = 1
-            yh = vcat(linspace(Z[:, k]- δ, Z[:, k] + δ, M)...)
+            yh = vcat(range(Z[:, k] .- δ, stop=(Z[:, k] .+ δ), length=M)...)
         end
 
         # Calculate auxiliary weights
@@ -203,7 +202,7 @@ function eapf(y, sys, par, δ)
         else
             for i = 1:par.N
                 μ = JP_m(X[i, :, k-1])
-                Σ = JP_s(R + Vn)
+                Σ = JP_s(R .+ Vn)
 
                 q_aux_list[i] = MvNormal(μ[2], Σ[2,2])
 
@@ -231,7 +230,7 @@ function eapf(y, sys, par, δ)
             # Resample using systematic resampling
             idx = collect(1:N)
             wc = cumsum(V[:, k-1])
-            u = (([0:(N-1)] + rand()) / N)[1]
+            u = (([0:(N-1)] .+ rand()) / N)[1]
             c = 1
             for i = 1:N
                 while wc[c] < u[i]
@@ -253,14 +252,15 @@ function eapf(y, sys, par, δ)
         if Γ[k] == 1
             for i = 1:N
 
-                """
+                #=
                 S = (inv(Q) + C'*inv(R)*C) \ eye(Q)
 
                 μ = S*(inv(Q)*A*Xr[i, :] + C'*inv(R)*Z[:, k])
                 Σ = S
 
                 Σ = fix_sym(Σ)
-                """
+                =#
+
                 μ = JP_m(Xr[i, :])
                 Σ = JP_s(R)
 
@@ -271,7 +271,7 @@ function eapf(y, sys, par, δ)
             end
         else
             for i = 1:par.N
-                """
+                #=
                 S = (inv(Q) + C'*inv(R + Vn)*C) \ eye(Q)
 
                 μ_func(yh) = S * (inv(Q)*A*Xr[i, :] + C'*inv(R + Vn)*yh)
@@ -290,9 +290,10 @@ function eapf(y, sys, par, δ)
                     println("Bad conditioned weights for Mixture Gaussian; resetting to uniform")
                     wh = 1 / M * ones(M)
                 end
-                """
+                =#
+
                 μ = JP_m(Xr[i, :])
-                Σ = JP_s(R + Vn)
+                Σ = JP_s(R .+ Vn)
 
                 wh = zeros(M)
                 for j = 1:M
@@ -307,8 +308,8 @@ function eapf(y, sys, par, δ)
                 end
 
 
-                S = fix_sym(Σ[1,1] - Σ[1, 2]*inv(Σ[2, 2])*Σ[1,2]')
-                μ_func(yh) = μ[1] + Σ[1,2]*inv(Σ[2,2])*(yh - μ[2])
+                S = fix_sym(Σ[1,1] .- Σ[1, 2]*inv(Σ[2, 2])*Σ[1,2]')
+                μ_func(yh) = μ[1] .+ Σ[1,2]*inv(Σ[2,2])*(yh .- μ[2])
 
                 MD = MixtureModel(map(y -> MvNormal([μ_func(y)...], S), yh), wh)
 
@@ -418,7 +419,7 @@ function ebse(y, sys, δ)
     x = zeros(nx, T)
     P = zeros(nx, nx, T)
 
-    P[:,:,1] = eye(nx)
+    P[:,:,1] = Matrix{Float64}(I, nx, nx)
 
     for k = 2:T
 
@@ -432,7 +433,7 @@ function ebse(y, sys, δ)
 
             # Discretisize the uniform distribution, currently only supports
             # dim(y) = 1
-            yh = vcat(linspace(Z[:, k]- δ, Z[:, k] + δ, M)...)
+            yh = vcat(range(Z[:, k] .- δ, stop=(Z[:, k] .+ δ), length=M)...)
         end
 
         # Predict
@@ -450,7 +451,7 @@ function ebse(y, sys, δ)
             w = zeros(1, M)
             for i = 1:M
                 θ[:, i] = S*(inv(Pp)*xp + C'*inv(R)*yh[i])
-                w[:, i] = pdf(MvNormal(C*xp, C*Pp*C' + R + Vn), yh[i, :])
+                w[:, i] .= pdf(MvNormal(C*xp, C*Pp*C' .+ R .+ Vn), yh[i, :])
             end
             w /= sum(w)
 

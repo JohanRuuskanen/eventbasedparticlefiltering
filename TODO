@@ -1,6 +1,6 @@
 
 Restructure the project nicer, e.g. create src with all funcs, create tests with all
-demonstrative tests.
+demonstrative tests. Extract funcs such as resampling to funcs
 
 Examine effect of lowering M for APF
 

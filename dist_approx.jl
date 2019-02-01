@@ -1,14 +1,13 @@
 using PyPlot
 using Distributions
 
-f(x, t) = MvNormal(x/2 + 25*x ./ (1 + x.^2) + 8*cos(1.2*t), 10*eye(1))
+f(x, t) = MvNormal(x/2 + 25*x ./ (1 + x.^2) .+ 8*cos(1.2*t), 10*eye(1))
 h(x, t) = MvNormal(atan.(x), 1*eye(1))
 
-
 x = [5]
-t = [1]
+t = 1
 
-z = linspace(-20, 20, 1000)
+z = range(-20, stop=20, length=1000)
 
 fp = zeros(size(z))
 hp = zeros(size(z))

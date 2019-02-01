@@ -31,7 +31,7 @@ function bpf(y, sys, par)
             # Resample using systematic resampling
             idx = collect(1:par.N)
             wc = cumsum(W[:, k-1])
-            u = (([0:(par.N-1)] + rand()) / par.N)[1]
+            u = (([0:(par.N-1)] .+ rand()) / par.N)[1]
             c = 1
             for i = 1:par.N
                 while wc[c] < u[i]
@@ -78,8 +78,8 @@ function apf(y, sys, par)
 
     idx = collect(1:par.N)
 
-	q_list = Array{Distribution}(par.N)
-	q_aux_list = Array{Distribution}(par.N)
+	q_list = Array{Distribution}(undef, par.N)
+	q_aux_list = Array{Distribution}(undef, par.N)
 
 	Xr = X[:, :, 1]
     N_T = par.N / 2
@@ -98,13 +98,13 @@ function apf(y, sys, par)
     	end
     	V[:, k-1] = V[:, k-1] ./ sum(V[:, k-1])
 
-        N_eff[k-1] = 1./(sum(V[:, k-1].^2))
+        N_eff[k-1] = 1 ./ (sum(V[:, k-1].^2))
         println(N_eff[k-1])
 
         if N_eff[k-1] < N_T
             # Resample using systematic resampling
             wc = cumsum(V[:, k-1])
-            u = (([0:(par.N-1)] + rand()) / par.N)[1]
+            u = (([0:(par.N-1)] .+ rand()) / par.N)[1]
             c = 1
             for i = 1:par.N
                 while wc[c] < u[i]
@@ -126,7 +126,7 @@ function apf(y, sys, par)
         for i = 1:par.N
             S = sys.C * sys.Q * sys.C' + sys.R
 
-            μ = sys.A*X[i, :, k-1] + sys.Q*sys.C' * inv(S) * (y[k] - sys.C*sys.A*X[i, :, k-1])
+            μ = sys.A*X[i, :, k-1] + sys.Q*sys.C' * inv(S) * (y[k] .- sys.C*sys.A*X[i, :, k-1])
             Σ = sys.Q - sys.Q*sys.C' * inv(S) * sys.C*sys.Q
 
             q_list[i] = MvNormal(μ, Σ)

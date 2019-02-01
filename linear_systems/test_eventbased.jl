@@ -2,25 +2,21 @@ using JLD
 using PyPlot
 using StatsBase
 using Distributions
+using LinearAlgebra
 
 include("../src/misc.jl")
 include("filters_eventbased.jl")
 
 # Parameters
 N = 500
-T = 1000
+T = 100
 δ = 2
-
-# Nonlinear and non-Gaussian system
-#f(x, t) = MvNormal(x/2 + 25*x ./ (1 + x.^2) + 8*cos(1.2*t), 10*eye(1))
-#h(x, t) = MvNormal(x.^2/20, 0.1*eye(1)) #MvNormal(atan.(x), 1*eye(1))
-#nd = [1, 1]
 
 A = [0.8 1; 0 0.95]
 C = [0.7 0.6]
 
-Q = 0.1*eye(2)
-R = 0.01*eye(1)
+Q = 0.1*Matrix{Float64}(I, 2, 2)
+R = 0.01*Matrix{Float64}(I, 1, 1)
 
 sys = lin_sys_params(A, C, Q, R, T)
 x, y = sim_lin_sys(sys)
@@ -32,30 +28,26 @@ ny = size(C, 1)
 par_bpf = pf_params(2000)
 par_apf = pf_params(500)
 
-tic()
+# Using benchmarktools or time?
+# Create struct to incorporate output parameters?
 X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, res_ebpf, fail_ebpf = ebpf(y, sys, par_bpf, δ)
-a = toc()
-tic()
 X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, res_eapf, fail_eapf = eapf(y, sys, par_apf, δ)
-b = toc()
-tic()
 xh_ebse, Ph_ebse, Z_ebse, Γ_ebse = ebse(y, sys, δ)
-c = toc()
 
 xh_ebpf = zeros(nx, T)
 xh_eapf = zeros(nx, T)
 for k = 1:nx
-    xh_ebpf[k, :] = sum(diag(W_ebpf'*X_ebpf[:, k, :]), 2)
-    xh_eapf[k, :] = sum(diag(W_eapf'*X_eapf[:, k, :]), 2)
+    xh_ebpf[k, :] = sum(diag(W_ebpf'*X_ebpf[:, k, :]), dims=2)
+    xh_eapf[k, :] = sum(diag(W_eapf'*X_eapf[:, k, :]), dims=2)
 end
 
 err_ebpf = x - xh_ebpf
 err_eapf = x - xh_eapf
 err_ebse = x - xh_ebse
 
-idx_bpf = find(x -> x == 1, Γ_ebpf)
-idx_apf = find(x -> x == 1, Γ_eapf)
-idx_ebse = find(x -> x == 1, Γ_ebse)
+idx_bpf = findall(x -> x == 1, Γ_ebpf)
+idx_apf = findall(x -> x == 1, Γ_eapf)
+idx_ebse = findall(x -> x == 1, Γ_ebse)
 
 err_ebpf_t = err_ebpf[:, idx_bpf]
 err_eapf_t = err_eapf[:, idx_apf]
@@ -119,10 +111,10 @@ plot(xh_ebse[2, :])
 legend(["True", "EBPF", "EAPF", "EBSE"])
 
 
-idx_res_ebpf = find(x->x == 1, res_ebpf)
-idx_fail_ebpf = find(x->x == 1, fail_ebpf)
-idx_res_eapf = find(x->x == 1, res_eapf)
-idx_fail_eapf = find(x->x == 1, fail_eapf)
+idx_res_ebpf = findall(x->x == 1, res_ebpf)
+idx_fail_ebpf = findall(x->x == 1, fail_ebpf)
+idx_res_eapf = findall(x->x == 1, res_eapf)
+idx_fail_eapf = findall(x->x == 1, fail_eapf)
 figure(2)
 clf()
 title("Effective sample size")
