@@ -6,3 +6,9 @@ Examine effect of lowering M for APF
 
 Examine how the posterior distribution looks like for BPF/APF for a controlled
 system with SOD
+
+Concatenate filters and filters eventbased? They are the same if we trigger on
+all values
+
+Is it possible to concatenate EBPF/EAPF by defining the sample/resample in
+another script?

@@ -20,6 +20,7 @@ function ebpf(y, sys, par, δ)
 
     X = zeros(N, nx, T)
     W = zeros(N, T)
+    S = zeros(N, T)
 
     Z = zeros(ny, T)
     Γ = zeros(T)
@@ -30,6 +31,7 @@ function ebpf(y, sys, par, δ)
 
     X[:, :, 1] = rand(Normal(0, 1), N, nx)
     W[:, 1] = 1/N .* ones(N, 1)
+    S[:, 1] = collect(1:N)
 
     idx = collect(1:N)
     Xr = X[:, :, 1]
@@ -53,7 +55,7 @@ function ebpf(y, sys, par, δ)
             # Resample using systematic resampling
             idx = collect(1:N)
             wc = cumsum(W[:, k-1])
-            u = (([0:(N-1)] .+ rand()) / N)[1]
+            u = ((collect(0:(N-1)) .+ rand()) / N)
             c = 1
             for i = 1:N
                 while wc[c] < u[i]
@@ -65,9 +67,11 @@ function ebpf(y, sys, par, δ)
             Xr = X[idx, :, k-1]
             Wr = 1/N .* ones(N, 1)
             res[k] = 1
+            S[:, k] = idx
         else
             Xr = X[:, :, k-1]
             Wr = W[:, k-1]
+            S[:, k] = S[:, k-1]
         end
 
 
@@ -115,7 +119,7 @@ function ebpf(y, sys, par, δ)
 
     end
 
-    return X, W, Z, Γ, Neff, res, fail
+    return X, W, Z, Γ, Neff, res, fail, S
 end
 
 function eapf(y, sys, par, δ)
@@ -230,7 +234,7 @@ function eapf(y, sys, par, δ)
             # Resample using systematic resampling
             idx = collect(1:N)
             wc = cumsum(V[:, k-1])
-            u = (([0:(N-1)] .+ rand()) / N)[1]
+            u = (collect(0:(N-1)) .+ rand()) / N
             c = 1
             for i = 1:N
                 while wc[c] < u[i]

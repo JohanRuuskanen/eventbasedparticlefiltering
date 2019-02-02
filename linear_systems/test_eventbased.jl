@@ -1,22 +1,26 @@
 using JLD
 using PyPlot
+using Random
 using StatsBase
 using Distributions
 using LinearAlgebra
 
-include("../src/misc.jl")
+include("../funcs/misc.jl")
+include("../funcs/plotting.jl")
 include("filters_eventbased.jl")
 
+Random.seed!(1)
+
 # Parameters
-N = 500
-T = 100
+N = 10
+T = 20
 δ = 2
 
 A = [0.8 1; 0 0.95]
 C = [0.7 0.6]
 
-Q = 0.1*Matrix{Float64}(I, 2, 2)
-R = 0.01*Matrix{Float64}(I, 1, 1)
+Q = 1*Matrix{Float64}(I, 2, 2)
+R = 1*Matrix{Float64}(I, 1, 1)
 
 sys = lin_sys_params(A, C, Q, R, T)
 x, y = sim_lin_sys(sys)
@@ -25,12 +29,15 @@ nx = size(A, 1)
 ny = size(C, 1)
 
 # For estimation
-par_bpf = pf_params(2000)
+par_bpf = pf_params(10)
 par_apf = pf_params(500)
 
 # Using benchmarktools or time?
 # Create struct to incorporate output parameters?
-X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, res_ebpf, fail_ebpf = ebpf(y, sys, par_bpf, δ)
+X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, res_ebpf, fail_ebpf, S = ebpf(y, sys, par_bpf, δ)
+plot_particle_trace(X_ebpf[:,1,:], S, x_true=x[1,:])
+
+
 X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, res_eapf, fail_eapf = eapf(y, sys, par_apf, δ)
 xh_ebse, Ph_ebse, Z_ebse, Γ_ebse = ebse(y, sys, δ)
 
@@ -92,10 +99,10 @@ println("")
 figure(1)
 clf()
 subplot(3, 1, 1)
-plot(y')
-plot(Z_ebpf')
-plot(Z_eapf')
-plot(Z_ebse')
+plot(y[:])
+plot(Z_ebpf[:])
+plot(Z_eapf[:])
+plot(Z_ebse[:])
 legend(["y", "z BPF", "z APF", "z EBSE"])
 subplot(3, 1, 2)
 plot(x[1, :])
