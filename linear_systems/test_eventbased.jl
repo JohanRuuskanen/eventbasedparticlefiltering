@@ -13,7 +13,7 @@ Random.seed!(2)
 
 # Parameters
 N = 10
-T = 40
+T = 50
 δ = 4
 
 #A = [0.8 1; 0 0.95]
@@ -38,19 +38,17 @@ par_apf = pf_params(N)
 # Using benchmarktools or time?
 # Create struct to incorporate output parameters?
 X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, res_ebpf, fail_ebpf, S = ebpf(y, sys, par_bpf, δ)
-plot_particle_trace(X_ebpf[:,1,:], S, x_true=x[1,:], Γ=Γ_ebpf, fignr=1)
 
 figure(1)
-title("Particle trace for EBPF")
-
-figure(2)
 clf()
-subplot(2, 1, 1)
-plot(y[:])
-plot(Z_ebpf[:])
-subplot(2, 1, 2)
-plot(x[:])
+subplot(3, 1, 1)
+plot_data(y[:], Z_ebpf[:], δ=δ, nofig=true)
+subplot(3, 1 ,2)
+plot_particle_trace(X_ebpf[:,1,:], S, x_true=x[1,:], Γ=Γ_ebpf, nofig=true)
+subplot(3, 1, 3)
+plot_effective_sample_size(W_ebpf, Γ=Γ_ebpf, nofig=true)
 
+#=
 
 X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, res_eapf, fail_eapf = eapf(y, sys, par_apf, δ)
 xh_ebse, Ph_ebse, Z_ebse, Γ_ebse = ebse(y, sys, δ)
@@ -105,6 +103,7 @@ println("EBPF Neff: $(mean(Neff_ebpf))")
 println("EBPF res: $(sum(res_ebpf))")
 println("EBPF fail: $(sum(fail_ebpf))")
 println("")
+    # Add plotting of trace from end?
 println("EAPF Neff: $(mean(Neff_eapf))")
 println("EAPF res: $(sum(res_eapf))")
 println("EAPF fail: $(sum(fail_eapf))")
@@ -147,3 +146,4 @@ subplot(2, 1, 2)
 plot(1:T, Neff_eapf, "C0")
 plot((1:T)[idx_res_eapf], Neff_eapf[idx_res_eapf], "C0o")
 plot((1:T)[idx_fail_eapf], Neff_eapf[idx_fail_eapf], "C0x")
+=#
