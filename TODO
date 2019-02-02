@@ -12,3 +12,7 @@ all values
 
 Is it possible to concatenate EBPF/EAPF by defining the sample/resample in
 another script?
+
+Is the calculation of Neff correct? For APF it should not be based on V, only
+on W. V could be used to calculate a "predictive" V for resampling. W is however
+tied to how we weight the particles and thus decides the "correct" sampling decay.

@@ -9,10 +9,10 @@ struct sys_params
 end
 
 struct lin_sys_params
-    A::Array{Float64}
-    C::Array{Float64}
-    Q::Array{Float64}
-    R::Array{Float64}
+    A::Array{Float64, 2}
+    C::Array{Float64, 2}
+    Q::Array{Float64, 2}
+    R::Array{Float64, 2}
     T::Int64
 end
 

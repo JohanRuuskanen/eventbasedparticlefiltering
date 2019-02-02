@@ -9,33 +9,47 @@ include("../funcs/misc.jl")
 include("../funcs/plotting.jl")
 include("filters_eventbased.jl")
 
-Random.seed!(1)
+Random.seed!(2)
 
 # Parameters
 N = 10
-T = 20
-δ = 2
+T = 40
+δ = 4
 
-A = [0.8 1; 0 0.95]
-C = [0.7 0.6]
+#A = [0.8 1; 0 0.95]
+#C = [0.7 0.6]
 
-Q = 1*Matrix{Float64}(I, 2, 2)
-R = 1*Matrix{Float64}(I, 1, 1)
-
-sys = lin_sys_params(A, C, Q, R, T)
-x, y = sim_lin_sys(sys)
+A = reshape([1.0], (1, 1))
+C = reshape([1.0], (1, 1))
 
 nx = size(A, 1)
 ny = size(C, 1)
 
+Q = 1*Matrix{Float64}(I, nx, nx)
+R = 0.1*Matrix{Float64}(I, ny, ny)
+
+sys = lin_sys_params(A, C, Q, R, T)
+x, y = sim_lin_sys(sys)
+
 # For estimation
-par_bpf = pf_params(10)
-par_apf = pf_params(500)
+par_bpf = pf_params(N)
+par_apf = pf_params(N)
 
 # Using benchmarktools or time?
 # Create struct to incorporate output parameters?
 X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, res_ebpf, fail_ebpf, S = ebpf(y, sys, par_bpf, δ)
-plot_particle_trace(X_ebpf[:,1,:], S, x_true=x[1,:])
+plot_particle_trace(X_ebpf[:,1,:], S, x_true=x[1,:], Γ=Γ_ebpf, fignr=1)
+
+figure(1)
+title("Particle trace for EBPF")
+
+figure(2)
+clf()
+subplot(2, 1, 1)
+plot(y[:])
+plot(Z_ebpf[:])
+subplot(2, 1, 2)
+plot(x[:])
 
 
 X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, res_eapf, fail_eapf = eapf(y, sys, par_apf, δ)

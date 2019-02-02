@@ -1,7 +1,8 @@
 using PyPlot
 
 # Plot the particle trace, dont use too large amount of particles!
-function plot_particle_trace(X::Array{Float64,2}, S::Array{Float64,2}; x_true=[], fig=[])
+function plot_particle_trace(X::Array{Float64,2}, S::Array{Float64,2};
+    x_true=[], Γ=[], fignr=0)
     if size(X) != size(S)
         error("Input size must be equal")
     end
@@ -11,11 +12,23 @@ function plot_particle_trace(X::Array{Float64,2}, S::Array{Float64,2}; x_true=[]
     S = Array{Float64, 2}(S')
     m, n = size(X)
 
+    X_max = maximum(X)
+    X_min = minimum(X)
+
     # Plot
-    if isempty(fig)
-        fig = figure()
+    if fignr > 0
+        figure(fignr)
+    else
+        figure()
     end
     clf()
+    if !isempty(Γ)
+        idxs = findall(x -> x == 1, Γ)
+        for idx in idxs
+            plt[:fill_between]([idx-1.25, idx-0.75], X_min-5, X_max+5, facecolor="green", alpha=0.3)
+        end
+    end
+
     if !isempty(x_true)
         plot(x_true[:], "r", linewidth=5, alpha=0.5)
     end
@@ -28,7 +41,7 @@ function plot_particle_trace(X::Array{Float64,2}, S::Array{Float64,2}; x_true=[]
         end
     end
     plot(X, "bo", markeredgecolor="k")
-
+    ylim([X_min-5, X_max+5])
 
 
     # Add plotting of trace from end?

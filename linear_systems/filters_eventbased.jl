@@ -71,7 +71,7 @@ function ebpf(y, sys, par, δ)
         else
             Xr = X[:, :, k-1]
             Wr = W[:, k-1]
-            S[:, k] = S[:, k-1]
+            S[:, k] = collect(1:N)
         end
 
 
