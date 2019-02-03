@@ -6,12 +6,12 @@ M = 5
 δ = 2
 
 
-mu = linspace(Z-δ, Z+δ, M)
+mu = range(Z-δ, stop=Z+δ, length=M)
 Vn = 2*δ/M * 1/2
 
 MG = MixtureModel(map(x -> Normal(x, Vn), mu))
 
-x = linspace(Z-2*δ, Z+2*δ, 1000)
+x = range(Z-2*δ, stop=Z+2*δ, length=1000)
 figure()
 clf()
 plot(x, pdf.(Uniform(Z - δ, Z + δ), x))

@@ -13,7 +13,7 @@ Random.seed!(2)
 
 # Parameters
 N = 10
-T = 50
+T = 200
 δ = 4
 
 #A = [0.8 1; 0 0.95]

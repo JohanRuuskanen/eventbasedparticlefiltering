@@ -1,9 +1,11 @@
 
-using PyCall
+#using PyCall
+using Random
 using PyPlot
 using StatsBase
 using Distributions
 
+#=
 PyCall.@pyimport matplotlib2tikz
 """
 `savetikz(path; fig = PyPlot.gcf(), extra::Vector{String})`
@@ -18,6 +20,7 @@ function savetikz(path; fig = PyPlot.gcf(), extra=[])
                              extra_tikzpicture_parameters = PyCall.pybuiltin("set")(extra))
     end
 end
+=#
 
 
 N = 1000
@@ -32,12 +35,12 @@ x1 = 1.5
 y0 = -2
 y1 = 2
 
-srand(6)
+Random.seed!(1337)
 
 x = ones(N)
-y = linspace(y0, y1, 1000)
+y = range(y0, stop=y1, length=1000)
 
-d1 = MixtureModel(map(x -> Normal(x, V), linspace(-1, 1, M)))
+d1 = MixtureModel(map(x -> Normal(x, V), range(-1, stop=1, length=M)))
 d2 = Normal(1, 0.2)
 
 X1 = rand(d1, nx)
@@ -52,12 +55,10 @@ idx2 = rand(Categorical(W2), nx)
 X2_bpf = X1[idx] + rand(Normal(0, 0.5), nx)
 X2_sis = zeros(nx)
 X2_apf = zeros(nx)
-println("got here")
 for k = 1:nx
     X2_sis[k] = X1[idx[k]] + rand(Normal(0.7*(mean(d2) - X1[idx[k]]), 0.3))
     X2_apf[k] = X1[idx2[k]] + rand(Normal(0.7*(mean(d2) - X1[idx2[k]]), 0.3))
 end
-println("Got here too")
 
 s1 = 8
 s2 = 2
