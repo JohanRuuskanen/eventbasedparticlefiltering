@@ -153,6 +153,7 @@ function eapf(y, sys, par, δ)
     X = zeros(N, nx, T)
     W = zeros(N, T)
     V = zeros(N, T)
+    S = zeros(N, T)
 
     Z = zeros(ny, T)
     Γ = zeros(T)
@@ -164,6 +165,7 @@ function eapf(y, sys, par, δ)
     X[:, :, 1] = rand(Normal(0, 1), N, nx)
     W[:, 1] = 1/N .* ones(N, 1)
     V[:, 1] = 1/N .* ones(N, 1)
+    S[:, 1] = collect(1:N)
 
     idx = collect(1:N)
 
@@ -178,8 +180,8 @@ function eapf(y, sys, par, δ)
     yh = zeros(M)
 
     JP_m(x) = [A*x, C*A*x]
-    JP_s(S) = [[Q] [Q*C'];
-                [C*Q] [C*Q*C' + S]]
+    JP_s(P) = [[Q] [Q*C'];
+                [C*Q] [C*Q*C' + P]]
     for k = 2:T
         # Run event kernel, SOD
         if norm(Z[:, k-1] - y[:, k]) >= δ
@@ -247,9 +249,11 @@ function eapf(y, sys, par, δ)
             Wr = 1/N * ones(N, 1)
             q_aux_list = q_aux_list[idx]
             res[k] = 1
+            S[:, k] = idx
         else
             Xr = X[:, :, k-1]
             Wr = W[:, k-1]
+            S[:, k] = collect(1:N)
         end
 
         # Propagate
@@ -268,9 +272,9 @@ function eapf(y, sys, par, δ)
                 μ = JP_m(Xr[i, :])
                 Σ = JP_s(R)
 
-                S = fix_sym(Σ[1,1] - Σ[1, 2]*inv(Σ[2, 2])*Σ[1,2]')
+                P = fix_sym(Σ[1,1] - Σ[1, 2]*inv(Σ[2, 2])*Σ[1,2]')
 
-                q_list[i] = MvNormal(μ[1] + Σ[1,2]*inv(Σ[2,2])*(Z[:,k] - μ[2]), S)
+                q_list[i] = MvNormal(μ[1] + Σ[1,2]*inv(Σ[2,2])*(Z[:,k] - μ[2]), P)
                 X[i, :, k] = rand(q_list[i])
             end
         else
@@ -312,10 +316,10 @@ function eapf(y, sys, par, δ)
                 end
 
 
-                S = fix_sym(Σ[1,1] .- Σ[1, 2]*inv(Σ[2, 2])*Σ[1,2]')
+                P = fix_sym(Σ[1,1] .- Σ[1, 2]*inv(Σ[2, 2])*Σ[1,2]')
                 μ_func(yh) = μ[1] .+ Σ[1,2]*inv(Σ[2,2])*(yh .- μ[2])
 
-                MD = MixtureModel(map(y -> MvNormal([μ_func(y)...], S), yh), wh)
+                MD = MixtureModel(map(y -> MvNormal([μ_func(y)...], P), yh), wh)
 
                 q_list[i] = MD
                 X[i, :, k] = rand(q_list[i])
@@ -387,7 +391,7 @@ function eapf(y, sys, par, δ)
 
     end
 
-    return X, W, Z, Γ, Neff, res, fail
+    return X, W, Z, Γ, Neff, res, fail, S
 end
 
 """
