@@ -22,6 +22,8 @@ function ebpf(y, sys, par, δ)
     W = zeros(N, T)
     S = zeros(N, T)
 
+    xh = zeros(nx, T)
+
     Z = zeros(ny, T)
     Γ = zeros(T)
 
@@ -33,21 +35,33 @@ function ebpf(y, sys, par, δ)
     W[:, 1] = 1/N .* ones(N, 1)
     S[:, 1] = collect(1:N)
 
+    xh[:, 1] = W[:, 1]' * X[:,:,1]
+
     idx = collect(1:N)
     Xr = X[:, :, 1]
     Wr = W[:, 1]
 
-    N_T = N / 2
+
+    N_T = N #/ 2
 
     for k = 2:T
 
-        # Run event kernel, SOD
-        if norm(Z[:, k-1] - y[:, k]) >= δ
+        if par.eventKernel == "SOD"
+            z = Z[:, k-1]
+        elseif par.eventKernel == "MBT"
+            xh[:, k] = W[:, k-1]' * X[:,:,k-1]
+            z = C*A*xh[:, k-1]
+        else
+            error("No such event kernel is implemented!")
+        end
+
+        # Run event kernel
+        if norm(z - y[:, k]) >= δ
             Γ[k] = 1
             Z[:, k] = y[:, k]
         else
             Γ[k] = 0
-            Z[:, k] = Z[:, k-1]
+            Z[:, k] = z
         end
 
         Neff[k] = 1 ./ sum(W[:, k-1].^2)
@@ -154,6 +168,7 @@ function eapf(y, sys, par, δ)
     W = zeros(N, T)
     V = zeros(N, T)
     S = zeros(N, T)
+    xh = zeros(nx, T)
 
     Z = zeros(ny, T)
     Γ = zeros(T)
@@ -166,6 +181,7 @@ function eapf(y, sys, par, δ)
     W[:, 1] = 1/N .* ones(N, 1)
     V[:, 1] = 1/N .* ones(N, 1)
     S[:, 1] = collect(1:N)
+    xh[:, 1] = W[:, 1]' * X[:,:,1]
 
     idx = collect(1:N)
 
@@ -176,20 +192,30 @@ function eapf(y, sys, par, δ)
     Xr = X[:, :, 1]
     Wr = W[:, 1]
 
-    N_T = N/2
+    N_T = N #/2
     yh = zeros(M)
 
     JP_m(x) = [A*x, C*A*x]
     JP_s(P) = [[Q] [Q*C'];
                 [C*Q] [C*Q*C' + P]]
     for k = 2:T
+
+        if par.eventKernel == "SOD"
+            z = Z[:, k-1]
+        elseif par.eventKernel == "MBT"
+            xh[:, k-1] = W[:, k-1]' * X[:,:,k-1]
+            z = C*A*xh[:, k-1]
+        else
+            error("No such event kernel is implemented!")
+        end
+
         # Run event kernel, SOD
-        if norm(Z[:, k-1] - y[:, k]) >= δ
+        if norm(z - y[:, k]) >= δ
             Γ[k] = 1
             Z[:, k] = y[:, k]
         else
             Γ[k] = 0
-            Z[:, k] = Z[:, k-1]
+            Z[:, k] = z
 
             # Discretisize the uniform distribution, currently only supports
             # dim(y) = 1

@@ -32,8 +32,8 @@ sys = lin_sys_params(A, C, Q, R, T)
 x, y = sim_lin_sys(sys)
 
 # For estimation
-par_bpf = pf_params(N)
-par_apf = pf_params(N)
+par_bpf = pf_params(N, "MBT")
+par_apf = pf_params(N, "MBT")
 
 # Using benchmarktools or time?
 # Create struct to incorporate output parameters?

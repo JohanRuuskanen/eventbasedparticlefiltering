@@ -19,6 +19,7 @@ end
 
 struct pf_params
     N::Number
+    eventKernel::String
 end
 
 function sim_sys(sys)
