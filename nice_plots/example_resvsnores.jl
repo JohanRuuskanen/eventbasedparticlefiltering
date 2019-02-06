@@ -44,11 +44,19 @@ X_nores, W_nores, S_nores, ~ = bpf(y, sys, par2)
 
 figure(1)
 clf()
+plot_particle_trace(reshape(X[:, 1, 1], N, 1), reshape(S[:, 1], N, 1), x_true=x[:], nofig=true)
+#plot_particle_trace(X[:, 1, :], S, x_true=x[:], nofig=true)
+title("State")
+legend([L"x_k", L"X^i_k"])
+
+figure(2)
+clf()
 plot_particle_trace(X[:, 1, :], S, x_true=x[:], nofig=true)
 title("With resample")
 legend([L"x_k", L"X^i_k"])
 
-figure(2)
+
+figure(3)
 clf()
 plot_particle_trace(X_nores[:, 1, :], S_nores, x_true=x[:], nofig=true)
 title("Without resample")
