@@ -35,7 +35,7 @@ x1 = 1.5
 y0 = -2
 y1 = 2
 
-Random.seed!(1337)
+Random.seed!(10000)
 
 x = ones(N)
 y = range(y0, stop=y1, length=1000)

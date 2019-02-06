@@ -22,7 +22,7 @@ y0 = -2
 y1 = 2
 y2 = 4
 
-Random.seed!(10)
+Random.seed!(3)
 
 x = ones(N)
 y = range(y0, stop=y1, length=1000)
