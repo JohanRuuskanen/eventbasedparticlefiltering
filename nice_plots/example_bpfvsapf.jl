@@ -1,6 +1,5 @@
 """
-Example for demonstrating the effects of using BPF versus APF for different
-event-kernels.
+Example for demonstrating the effects of resampling
 """
 
 using JLD
@@ -17,11 +16,11 @@ include("../linear_systems/filters_eventbased.jl")
 Random.seed!(2)
 
 # Parameters
-N = 1000
+N = 10
 T = 200
 δ = 4
 
-A = reshape([0.9], (1, 1))
+A = reshape([1.0], (1, 1))
 C = reshape([1.0], (1, 1))
 
 nx = size(A, 1)
@@ -34,8 +33,8 @@ sys = lin_sys_params(A, C, Q, R, T)
 x, y = sim_lin_sys(sys)
 
 # For estimation
-par_bpf = pf_params(N, "MBT")
-par_apf = pf_params(N, "MBT")
+par_bpf = pf_params(N, "MBT", N)
+par_apf = pf_params(N, "MBT", N)
 
 # Using benchmarktools or time?
 # Create struct to incorporate output parameters?

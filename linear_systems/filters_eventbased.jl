@@ -41,8 +41,7 @@ function ebpf(y, sys, par, δ)
     Xr = X[:, :, 1]
     Wr = W[:, 1]
 
-
-    N_T = N #/ 2
+    N_T = par.Nlim
 
     for k = 2:T
 
@@ -65,7 +64,7 @@ function ebpf(y, sys, par, δ)
         end
 
         Neff[k] = 1 ./ sum(W[:, k-1].^2)
-        if Neff[k] < N_T
+        if Neff[k] <= N_T
             # Resample using systematic resampling
             idx = collect(1:N)
             wc = cumsum(W[:, k-1])
@@ -192,7 +191,7 @@ function eapf(y, sys, par, δ)
     Xr = X[:, :, 1]
     Wr = W[:, 1]
 
-    N_T = N #/2
+    N_T = par.Nlim
     yh = zeros(M)
 
     JP_m(x) = [A*x, C*A*x]
@@ -258,7 +257,7 @@ function eapf(y, sys, par, δ)
         end
 
         Neff[k] = 1/sum(V[:, k-1].^2)
-        if Neff[k] < N_T
+        if Neff[k] <= N_T
             # Resample using systematic resampling
             idx = collect(1:N)
             wc = cumsum(V[:, k-1])

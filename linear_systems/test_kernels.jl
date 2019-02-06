@@ -32,8 +32,8 @@ sys = lin_sys_params(A, C, Q, R, T)
 x, y = sim_lin_sys(sys)
 
 # For estimation
-par1 = pf_params(N, "SOD")
-par2 = pf_params(N, "MBT")
+par1 = pf_params(N, "SOD", N)
+par2 = pf_params(N, "MBT", N)
 
 # Using benchmarktools or time?
 # Create struct to incorporate output parameters?

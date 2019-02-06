@@ -20,14 +20,14 @@ function bpf(y, sys, par)
     idx = collect(1:par.N)
     Xr = X[:, :, 1]
 
-    N_T = par.N / 2
+    N_T = par.Nlim
     N_eff = zeros(T)
 
     for k = 2:sys.T
 
         N_eff[k-1] = 1/(sum(W[:, k-1].^2))
         println(N_eff[k-1])
-        if N_eff[k-1] < N_T
+        if N_eff[k-1] <= N_T
             # Resample using systematic resampling
             idx = collect(1:par.N)
             wc = cumsum(W[:, k-1])
@@ -82,7 +82,7 @@ function apf(y, sys, par)
 	q_aux_list = Array{Distribution}(undef, par.N)
 
 	Xr = X[:, :, 1]
-    N_T = par.N / 2
+    N_T = par.Nlim
     N_eff = zeros(T)
 
     resample = false
@@ -101,7 +101,7 @@ function apf(y, sys, par)
         N_eff[k-1] = 1 ./ (sum(V[:, k-1].^2))
         println(N_eff[k-1])
 
-        if N_eff[k-1] < N_T
+        if N_eff[k-1] <= N_T
             # Resample using systematic resampling
             wc = cumsum(V[:, k-1])
             u = (([0:(par.N-1)] .+ rand()) / par.N)[1]

@@ -18,8 +18,9 @@ end
 
 
 struct pf_params
-    N::Number
+    N::Int64
     eventKernel::String
+    Nlim::Float64
 end
 
 function sim_sys(sys)
