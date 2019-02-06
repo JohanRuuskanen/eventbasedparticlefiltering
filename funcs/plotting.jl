@@ -23,21 +23,21 @@ function plot_particle_trace(X::Array{Float64,2}, S::Array{Float64,2};
         idxs = findall(x -> x == 1, Γ)
         for idx in idxs
             plt[:fill_between]([idx-1.25, idx-0.75], X_min-5, X_max+5,
-                facecolor="green", alpha=0.5)
+                facecolor="green", alpha=0.5, zorder=0)
         end
     end
     if !isempty(x_true)
-        plot(x_true[:], "r", linewidth=5, alpha=0.5)
+        plot(x_true[:], "r", linewidth=5, alpha=0.5, zorder=5)
     end
+    plot(X, "C0o", markeredgecolor="k", zorder=15)
     for i = 1:m-1
         for j = 1:n
             branch = findall(x-> x == j, S[i+1,:])
             for k in branch
-                plot([i-1, i], [X[i, j], X[i+1, k]], "k")
+                plot([i-1, i], [X[i, j], X[i+1, k]], "k", zorder=10)
             end
         end
     end
-    plot(X, "C0o", markeredgecolor="k")
     ylim([X_min-5, X_max+5])
 end
 

@@ -32,7 +32,6 @@ function bpf(y, sys, par)
     for k = 2:sys.T
 
         N_eff[k-1] = 1/(sum(W[:, k-1].^2))
-        println(N_eff[k-1])
         if N_eff[k-1] <= N_T
             # Resample using systematic resampling
             idx = collect(1:par.N)
@@ -68,7 +67,7 @@ function bpf(y, sys, par)
 
     end
 
-    return X, W, N_eff
+    return X, W, S, N_eff
 end
 
 function apf(y, sys, par)
