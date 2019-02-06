@@ -13,12 +13,17 @@ function bpf(y, sys, par)
 
     X = zeros(par.N, nx, sys.T)
     W = zeros(par.N, sys.T)
+	S = zeros(par.N, T)
 
     X[:, :, 1] = rand(Normal(0, 1), par.N, nx)
     W[:, 1] = 1/par.N .* ones(par.N, 1)
 
     idx = collect(1:par.N)
     Xr = X[:, :, 1]
+	S[:, 1] = collect(1:par.N)
+
+	Xr = X[:, :, 1]
+	Wr = W[:, 1]
 
 	N = par.N
     N_T = par.Nlim
@@ -41,18 +46,23 @@ function bpf(y, sys, par)
                 idx[i] = c
             end
 
-            X[:, :, k-1] = X[idx, :, k-1]
-            W[:, k-1] = 1/par.N .* ones(par.N, 1)
-        end
+			Xr = X[idx, :, k-1]
+            Wr = 1/N .* ones(N, 1)
+			S[:, k] = idx
+        else
+			Xr = X[:, :, k-1]
+            Wr = W[:, k-1]
+			S[:, k] = collect(1:N)
+		end
 
         # Propagate
         for i = 1:par.N
-            X[i, :, k] = sys.A * X[i, :, k-1] + rand(MvNormal(zeros(nx), sys.Q))
+            X[i, :, k] = sys.A * Xr[i] + rand(MvNormal(zeros(nx), sys.Q))
         end
 
         # Weight
         for i = 1:par.N
-            W[i, k] = pdf(MvNormal(sys.C * X[i, :, k], sys.R), y[:, k]) * W[i, k-1]
+            W[i, k] = pdf(MvNormal(sys.C * X[i, :, k], sys.R), y[:, k]) * Wr[i]
         end
         W[:, k] = W[:, k] ./ sum(W[:, k])
 
