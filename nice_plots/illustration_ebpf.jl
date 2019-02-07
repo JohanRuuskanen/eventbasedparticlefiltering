@@ -56,9 +56,10 @@ a2 = 1/pdf(d2, mean(d2))
 a3 = 1/pdf(d3, mean(d3))
 
 total_figs = 11
+figsize = (8, 3)
 # Step 1
 for fig = 1:total_figs
-    figure(fig)
+    figure(fig, figsize=figsize)
     clf()
     plot3D(vx1*ones(N), y, a1*pdf.(d1, y), "C0", linewidth=2.0)
     axis("off")
@@ -156,108 +157,9 @@ for k = 1:nx
     plot3D(vx3*ones(N2), X3[k]*ones(N2), [0, a3*pdf.(d3, X3[k])], "C1--",zorder=0)
 end
 
-#=
-figure(2)
-clf()
-plot3D(vx*ones(N), y, a*pdf.(d1, y), "C0", linewidth=2.0)
-plot3D(vx*ones(nx), X1, zeros(size(X1)), "C1o", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-axis("off")
-xlim([x0, x1])
-ylim([y0, y1])
-gca()[:view_init](30, -35)
-draw()
-
-figure(3)
-clf()
-plot3D(vx*ones(N), y, a*pdf.(d1, y), "C0", linewidth=2.0)
-plot3D(vx*ones(nx), X1, a*pdf.(d1, X1), "C1o", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-for k = 1:nx
-    plot3D(vx*ones(N2), X1[k]*ones(N2), [0, a*pdf.(d1, X1[k])], "C1--",zorder=0)
+# Save figures
+basepath = "/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/"
+for k = 1:total_figs
+    figure(k)
+    savefig(basepath*"bpf_example" * string(k) * ".svg")
 end
-axis("off")
-xlim([x0, x1])
-ylim([y0, y1])
-gca()[:view_init](30, -35)
-draw()
-
-figure(4)
-clf()
-# Step 2
-plot3D(vx*ones(N), y, a*pdf.(d1, y), "C0", linewidth=2.0)
-plot3D(vx*ones(nx), X1, a*pdf.(d1, X1), "C1o", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-for k = 1:nx
-    plot3D(vx*ones(N2), X1[k]*ones(N2), [0, a*pdf.(d1, X1[k])], "C1--",zorder=0)
-end
-vx = 1
-a = 1/pdf(d2, mean(d2))
-for k = 1:nx
-    plot3D([0, 1], [X1[idx[k]], X2_bpf[k]], [0, 0], "C1:")
-end
-plot3D(vx*ones(N), y, a*pdf.(d2, y), "C0", linewidth=2.0)
-plot3D(vx*ones(nx), X2_bpf, zeros(size(X2_bpf)), "C1o", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-axis("off")
-xlim([x0, x1])
-ylim([y0, y1])
-gca()[:view_init](30, -35)
-draw()
-
-
-figure(5)
-clf()
-vx = 0
-a = 1/pdf(d1, mean(d1))
-plot3D(vx*ones(N), y, a*pdf.(d1, y), "C0", linewidth=2.0)
-plot3D(vx*ones(nx), X1, a*pdf.(d1, X1), "C1o", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-for k = 1:nx
-    plot3D(vx*ones(N2), X1[k]*ones(N2), [0, a*pdf.(d1, X1[k])], "C1--",zorder=0)
-end
-vx = 1
-a = 1/pdf(d2, mean(d2))
-for k = 1:nx
-    plot3D([0, 1], [X1[idx[k]], X2_bpf[k]], [0, 0], "C1:")
-end
-plot3D(vx*ones(N), y, a*pdf.(d2, y), "C0", linewidth=2.0)
-plot3D(vx*ones(nx), X2_bpf, a*pdf.(d2, X2_bpf), "C1o", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-axis("off")
-xlim([x0, x1])
-ylim([y0, y1])
-gca()[:view_init](30, -35)
-draw()
-
-
-=#
-#
-#vx = 1
-#a = 1/pdf(d2, mean(d2))
-#plot3D(vx*ones(N), y, a*pdf.(d2, y), "C0", linewidth=2.0)
-#for k = 1:nx
-#    plot3D(vx*ones(N2), X2_bpf[k]*ones(N2), [0, a*pdf.(d2, X2_bpf[k])], "C1--")
-#end
-#plot3D(vx*ones(nx), X2_bpf, a*pdf.(d2, X2_bpf), "C1o", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-
-
-#=
-fig2 = figure(2)
-clf()
-vx = 0
-a = 1/pdf(d1, mean(d1))
-plot3D(vx*ones(N), y, a*pdf.(d1, y), "C0", linewidth=2.0)
-for k = 1:nx
-    plot3D([0, 1], [X1[idx2[k]], X2_apf[k]], [0, 0], "C3:")
-    plot3D(vx*ones(N2), X1[k]*ones(N2), [0, a*pdf.(d1, X1[k])], "C3--")
-end
-plot3D(vx*ones(nx), X1, a*pdf.(d1, X1), "C3s", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-vx = 1
-a = 1/pdf(d2, mean(d2))
-plot3D(vx*ones(N), y, a*pdf.(d2, y), "C0", linewidth=2.0)
-for k = 1:nx
-    plot3D(vx*ones(N2), X2_apf[k]*ones(N2), [0, a*pdf.(d2, X2_apf[k])], "C3--")
-end
-plot3D(vx*ones(nx), X2_apf, a*pdf.(d2, X2_apf), "C3s", markeredgewidth=1.5, markeredgecolor=(0,0,0,1))
-
-axis("off")
-xlim([x0, x1])
-ylim([y0, y1])
-gca()[:view_init](30, -35)
-draw()
-=#

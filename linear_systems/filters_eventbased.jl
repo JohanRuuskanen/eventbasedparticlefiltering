@@ -62,6 +62,7 @@ function ebpf(y, sys, par, δ)
             Γ[k] = 0
             Z[:, k] = z
         end
+        #println(k, z, y[:, k], Γ[k])
 
         Neff[k] = 1 ./ sum(W[:, k-1].^2)
         if Neff[k] <= N_T
