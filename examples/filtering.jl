@@ -37,17 +37,18 @@ par_apf = pf_params(N, "MBT", N/2)
 
 # Using benchmarktools or time?
 # Create struct to incorporate output parameters?
-X_ebpf, W_ebpf, Z_ebpf, Γ_ebpf, Neff_ebpf, res_ebpf, fail_ebpf, S_ebpf = ebpf(y, sys, par_bpf, δ)
+output_bpf = ebpf(y, sys, par_bpf, δ)
 X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, res_eapf, fail_eapf, S_eapf = eapf(y, sys, par_apf, δ)
 
 figure(1)
 clf()
 subplot(3, 1, 1)
-plot_data(y[:], Z_ebpf[:], δ=δ, nofig=true)
+plot_data(y[:], output_bpf.Z[:], δ=δ, nofig=true)
 subplot(3, 1 ,2)
-plot_particle_trace(X_ebpf[:,1,:], S_ebpf, x_true=x[1,:], Γ=Γ_ebpf, nofig=true)
+plot_particle_trace(output_bpf.X[:,1,:], output_bpf.S, x_true=x[1,:],
+    Γ=output_bpf.Γ, nofig=true)
 subplot(3, 1, 3)
-plot_effective_sample_size(W_ebpf, Γ=Γ_ebpf, nofig=true)
+plot_effective_sample_size(output_bpf.W, Γ=output_bpf.Γ, nofig=true)
 
 figure(2)
 clf()
