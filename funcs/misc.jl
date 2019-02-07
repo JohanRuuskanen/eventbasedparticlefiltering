@@ -16,6 +16,15 @@ struct lin_sys_params
     T::Int64
 end
 
+struct output
+    X::Array{Float64, 3}
+    W::Array{Float64, 2}
+    S::Array{Float64, 2}
+    Z::Array{Float64, 2}
+    Γ::Array{Float64, 1}
+    res::Array{Float64, 1}
+    fail::Array{Float64, 1}
+end
 
 struct pf_params
     N::Int64

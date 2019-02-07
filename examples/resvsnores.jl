@@ -39,8 +39,8 @@ par2 = pf_params(N, "MBT", -1)
 
 # Using benchmarktools or time?
 # Create struct to incorporate output parameters?
-X, W, S, ~ = bpf(y, sys, par1)
-X_nores, W_nores, S_nores, ~ = bpf(y, sys, par2)
+X, W, S, _ = bpf(y, sys, par1)
+X_nores, W_nores, S_nores, _ = bpf(y, sys, par2)
 
 figure(1, figsize=(6, 3))
 clf()

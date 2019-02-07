@@ -133,7 +133,7 @@ function ebpf(y, sys, par, δ)
 
     end
 
-    return X, W, Z, Γ, Neff, res, fail, S
+    return output(X, W, S, Z, Γ, res, fail)
 end
 
 function eapf(y, sys, par, δ)
@@ -417,7 +417,7 @@ function eapf(y, sys, par, δ)
 
     end
 
-    return X, W, Z, Γ, Neff, res, fail, S
+    return output(X, W, S, Z, Γ, res, fail)
 end
 
 """

@@ -7,7 +7,7 @@ using LinearAlgebra
 
 include("../funcs/misc.jl")
 include("../funcs/plotting.jl")
-include("filters_eventbased.jl")
+include("../linear_systems/filters_eventbased.jl")
 
 Random.seed!(2)
 
@@ -38,7 +38,7 @@ par_apf = pf_params(N, "MBT", N/2)
 # Using benchmarktools or time?
 # Create struct to incorporate output parameters?
 output_bpf = ebpf(y, sys, par_bpf, δ)
-X_eapf, W_eapf, Z_eapf, Γ_eapf, Neff_eapf, res_eapf, fail_eapf, S_eapf = eapf(y, sys, par_apf, δ)
+output_apf = eapf(y, sys, par_apf, δ)
 
 figure(1)
 clf()
@@ -53,11 +53,12 @@ plot_effective_sample_size(output_bpf.W, Γ=output_bpf.Γ, nofig=true)
 figure(2)
 clf()
 subplot(3, 1, 1)
-plot_data(y[:], Z_eapf[:], δ=δ, nofig=true)
+plot_data(y[:], output_apf.Z[:], δ=δ, nofig=true)
 subplot(3, 1 ,2)
-plot_particle_trace(X_eapf[:,1,:], S_eapf, x_true=x[1,:], Γ=Γ_eapf, nofig=true)
+plot_particle_trace(output_apf.X[:,1,:], output_apf.S, x_true=x[1,:],
+    Γ=output_apf.Γ, nofig=true)
 subplot(3, 1, 3)
-plot_effective_sample_size(W_eapf, Γ=Γ_eapf, nofig=true)
+plot_effective_sample_size(output_apf.W, Γ=output_apf.Γ, nofig=true)
 
 
 
