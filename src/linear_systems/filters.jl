@@ -13,7 +13,7 @@ function bpf(y, sys, par)
 
     X = zeros(par.N, nx, sys.T)
     W = zeros(par.N, sys.T)
-	S = zeros(par.N, T)
+	S = zeros(par.N, sys.T)
 
     X[:, :, 1] = rand(Normal(0, 1), par.N, nx)
     W[:, 1] = 1/par.N .* ones(par.N, 1)
@@ -27,7 +27,7 @@ function bpf(y, sys, par)
 
 	N = par.N
     N_T = par.Nlim
-    N_eff = zeros(T)
+    N_eff = zeros(sys.T)
 
     for k = 2:sys.T
 
