@@ -11,10 +11,16 @@ end
 function test_script_crash(script_path)
     try
         include("$(script_path)")
-        plt[:close]("all")
-        return true
+        try
+            plt[:close]("all")
+        finally
+            return true
+        end
     catch
-        plt[:close]("all")
-        return false
+        try
+            plt[:close]("all")
+        finally
+            return false
+        end
     end
 end
