@@ -1,13 +1,8 @@
-using JLD
-using PyPlot
-using Random
-using StatsBase
-using Distributions
-using LinearAlgebra
 
-include("../funcs/misc.jl")
-include("../funcs/plotting.jl")
-include("../linear_systems/filters_eventbased.jl")
+using Random
+using PyPlot
+using LinearAlgebra
+using EventBasedParticleFiltering
 
 Random.seed!(2)
 
@@ -45,7 +40,7 @@ clf()
 plot_data(y[:], output_bpf.Z[:], δ=δ, nofig=true)
 title("Using SOD")
 legend([L"y_k", L"z_k", L"H_k"], loc="upper left", fontsize="small")
-savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/SOD_example.svg")
+#savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/SOD_example.svg")
 
 
 figure(2, figsize=(5, 2.5))
@@ -53,4 +48,4 @@ clf()
 plot_data(y[:], output_apf.Z[:], δ=δ, nofig=true)
 title("Using MBT")
 legend([L"y_k", L"z_k", L"H_k"], loc="upper left", fontsize="small")
-savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/MBT_example.svg")
+#savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/MBT_example.svg")

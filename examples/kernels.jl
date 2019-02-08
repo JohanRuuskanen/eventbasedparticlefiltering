@@ -1,13 +1,7 @@
-using JLD
-using PyPlot
-using Random
-using StatsBase
-using Distributions
-using LinearAlgebra
 
-include("../funcs/misc.jl")
-include("../funcs/plotting.jl")
-include("../linear_systems/filters_eventbased.jl")
+using Random
+using PyPlot
+using EventBasedParticleFiltering
 
 Random.seed!(2)
 

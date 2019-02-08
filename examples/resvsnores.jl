@@ -3,16 +3,10 @@ Example for demonstrating the effects of using BPF versus APF for different
 event-kernels.
 """
 
-using JLD
-using PyPlot
 using Random
-using StatsBase
-using Distributions
+using PyPlot
 using LinearAlgebra
-
-include("../funcs/misc.jl")
-include("../funcs/plotting.jl")
-include("../linear_systems/filters.jl")
+using EventBasedParticleFiltering
 
 Random.seed!(2)
 
@@ -49,7 +43,7 @@ plot_particle_trace(reshape(X[:, 1, 1], N, 1), reshape(S[:, 1], N, 1), x_true=x[
 title("State")
 legend([L"x_k", L"X^i_k"], loc="upper right")
 ylim([-7, 7])
-savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/test_sample.svg")
+#savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/test_sample.svg")
 
 
 # No resample
@@ -59,7 +53,7 @@ plot_particle_trace(X[:, 1, :], S, x_true=x[:], nofig=true)
 title("With resample")
 legend([L"x_k", L"X^i_k"], loc="upper right")
 ylim([-7, 7])
-savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/with_sample.svg")
+#savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/with_sample.svg")
 
 
 figure(3, figsize=(6, 3))
@@ -68,7 +62,7 @@ plot_particle_trace(X_nores[:, 1, 1:2], S_nores[:, 1:2], x_true=x[:], nofig=true
 title("Without resample")
 legend([L"x_k", L"X^i_k"], loc="upper right")
 ylim([-7, 7])
-savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/no_sample2.svg")
+#savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/no_sample2.svg")
 
 
 figure(4, figsize=(6, 3))
@@ -77,7 +71,7 @@ plot_particle_trace(X_nores[:, 1, 1:3], S_nores[:, 1:3], x_true=x[:], nofig=true
 title("Without resample")
 legend([L"x_k", L"X^i_k"], loc="upper right")
 ylim([-7, 7])
-savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/no_sample3.svg")
+#savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/no_sample3.svg")
 
 
 figure(5, figsize=(6, 3))
@@ -86,7 +80,7 @@ plot_particle_trace(X_nores[:, 1, 1:4], S_nores[:, 1:4], x_true=x[:], nofig=true
 title("Without resample")
 legend([L"x_k", L"X^i_k"], loc="upper right")
 ylim([-7, 7])
-savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/no_sample4.svg")
+#savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/no_sample4.svg")
 
 
 figure(6, figsize=(6, 3))
@@ -95,4 +89,4 @@ plot_particle_trace(X_nores[:, 1, :], S_nores, x_true=x[:], nofig=true)
 title("Without resample")
 legend([L"x_k", L"X^i_k"], loc="upper right")
 ylim([-7, 7])
-savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/no_sampleall.svg")
+#savefig("/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/no_sampleall.svg")

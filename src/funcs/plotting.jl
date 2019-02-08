@@ -1,4 +1,3 @@
-using PyPlot
 
 # Plot the particle trace, dont use too large amount of particles!
 function plot_particle_trace(X::Array{Float64,2}, S::Array{Float64,2};

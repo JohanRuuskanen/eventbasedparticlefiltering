@@ -1,4 +1,3 @@
-
 struct sys_params
     f::Function
     h::Function

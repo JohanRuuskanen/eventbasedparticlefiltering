@@ -2,16 +2,10 @@
 Example for demonstrating the effects of resampling
 """
 
-using JLD
-using PyPlot
 using Random
-using StatsBase
-using Distributions
+using PyPlot
 using LinearAlgebra
-
-include("../funcs/misc.jl")
-include("../funcs/plotting.jl")
-include("../linear_systems/filters_eventbased.jl")
+using EventBasedParticleFiltering
 
 Random.seed!(2)
 
@@ -46,7 +40,7 @@ output_apf2 = eapf(y, sys, par2, δ)
 
 plt[:close]("all")
 figsize=(8, 3)
-basepath="/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/"
+#basepath="/home/johanr/Store/presentations/inspiration_coffe_feb-19/graphics/"
 figure(1, figsize=figsize)
 clf()
 subplot(2, 1, 1)
@@ -56,7 +50,7 @@ legend([L"y_k", L"z_k", L"H_k"], loc="lower left")
 subplot(2, 1, 2)
 plot_effective_sample_size(output_bpf1.W, Γ=output_bpf1.Γ, nofig=true)
 legend([L"N_{eff}"], loc="lower left")
-savefig(basepath*"bpfSOD.svg")
+#savefig(basepath*"bpfSOD.svg")
 
 
 figure(2, figsize=figsize)
@@ -68,7 +62,7 @@ legend([L"y_k", L"z_k", L"H_k"], loc="lower left")
 subplot(2, 1, 2)
 plot_effective_sample_size(output_apf1.W, Γ=output_apf1.Γ, nofig=true)
 legend([L"N_{eff}"], loc="lower left")
-savefig(basepath*"apfSOD.svg")
+#savefig(basepath*"apfSOD.svg")
 
 
 figure(3, figsize=figsize)
@@ -80,7 +74,7 @@ legend([L"y_k", L"z_k", L"H_k"], loc="lower left")
 subplot(2, 1, 2)
 plot_effective_sample_size(output_bpf2.W, Γ=output_bpf2.Γ, nofig=true)
 legend([L"N_{eff}"], loc="lower left")
-savefig(basepath*"bpfMBT.svg")
+#savefig(basepath*"bpfMBT.svg")
 
 figure(4, figsize=figsize)
 clf()
@@ -91,4 +85,4 @@ legend([L"y_k", L"z_k", L"H_k"], loc="lower left")
 subplot(2, 1, 2)
 plot_effective_sample_size(output_apf2.W, Γ=output_apf2.Γ, nofig=true)
 legend([L"N_{eff}"], loc="lower left")
-savefig(basepath*"apfMBT.svg")
+#savefig(basepath*"apfMBT.svg")
