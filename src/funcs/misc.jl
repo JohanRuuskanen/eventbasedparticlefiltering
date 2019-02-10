@@ -22,7 +22,7 @@ struct pf_params
     Nlim::Float64
 end
 
-function sim_sys(sys)
+function sim_sys(sys::sys_params)
     nx = size(sys.A, 1)
     ny = size(sys.C, 1)
 
@@ -37,13 +37,13 @@ function sim_sys(sys)
     return x, y
 end
 
-function fix_sym(Σ; lim=1e-9)
+function fix_sym(Σ::Array{Float64,2}; lim=1e-9, warning=true)
     # Caclulating the inverse yields small numerical errors that makes the
     # matrices non-symmetric by a small margin.
 
     Σ_new = Array(Hermitian(Σ))
 
-    if norm(Σ - Σ_new) > lim
+    if norm(Σ - Σ_new) > lim && warning
         println("Warning: norm difference in symmetrization exceedes limit $(lim); $(norm(Σ - Σ_new))")
     end
     return Σ_new
