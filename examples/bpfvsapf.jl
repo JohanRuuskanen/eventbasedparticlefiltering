@@ -23,8 +23,8 @@ ny = size(C, 1)
 Q = 2*Matrix{Float64}(I, nx, nx)
 R = 0.1*Matrix{Float64}(I, ny, ny)
 
-sys = lin_sys_params(A, C, Q, R, T)
-x, y = sim_lin_sys(sys)
+sys = sys_params(A, C, Q, R, T)
+x, y = sim_sys(sys)
 
 # For estimation
 par1 = pf_params(N, "SOD", N)
