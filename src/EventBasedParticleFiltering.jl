@@ -28,5 +28,6 @@ module EventBasedParticleFiltering
     include("funcs/filters_eventbased.jl")
     include("funcs/misc.jl")
     include("funcs/plotting.jl")
+    include("funcs/resampling.jl")
 
 end
