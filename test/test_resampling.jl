@@ -10,7 +10,7 @@
             idx = res_func(W[:, k])
             for i in idx; X[i] += 1 end
         end
-        diff = X - Y
+        diff = abs.(X - Y)
 
         return diff
     end
