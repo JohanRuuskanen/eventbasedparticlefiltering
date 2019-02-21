@@ -1,4 +1,11 @@
 
+function multinomial_resampling(W::Array{Float64, 1})
+    N = size(W, 1)
+    idx = rand(Categorical(W), N)
+    return idx
+end
+
+
 function systematic_resampling(W::Array{Float64, 1})
     N = size(W, 1)
     idx = collect(1:N)
