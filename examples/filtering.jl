@@ -1,6 +1,7 @@
 
 using Random
 using PyPlot
+using LinearAlgebra
 using EventBasedParticleFiltering
 
 Random.seed!(2)
