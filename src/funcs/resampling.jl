@@ -5,7 +5,6 @@ function resampling_multinomial(W::Array{Float64, 1})
     return idx
 end
 
-
 function resampling_systematic(W::Array{Float64, 1})
     N = size(W, 1)
     idx = collect(1:N)
