@@ -190,30 +190,6 @@ function eapf(y, sys, par, δ)
         xh[:, k-1] = W[:, k-1]' * X[:,:,k-1]
         Z[:, k], Γ[k], yh = eventSampling(y[:,k], Z[:, k-1], xh[:, k-1], sys, par, δ, M)
 
-        #=
-        if par.eventKernel == "SOD"
-            z = Z[:, k-1]
-        elseif par.eventKernel == "MBT"
-            xh[:, k-1] = W[:, k-1]' * X[:,:,k-1]
-            z = C*A*xh[:, k-1]
-        else
-            error("No such event kernel is implemented!")
-        end
-
-        # Run event kernel, SOD
-        if norm(z - y[:, k]) >= δ
-            Γ[k] = 1
-            Z[:, k] = y[:, k]
-        else
-            Γ[k] = 0
-            Z[:, k] = z
-
-            # Discretisize the uniform distribution, currently only supports
-            # dim(y) = 1
-            yh = vcat(range(Z[:, k] .- δ, stop=(Z[:, k] .+ δ), length=M)...)
-        end
-        =#
-
         # Calculate auxiliary weights
         if Γ[k] == 1
             for i = 1:N
@@ -265,14 +241,11 @@ function eapf(y, sys, par, δ)
             S[:, k] = collect(1:N)
         end
 
+        #
+
         # Propagate
-        if Γ[k] == 1
-            X[:, :, k], q_list = propagation_locallyOptimal_newEvent(Xr, Z[:, k],
-                JP_m, JP_s, sys)
-        else
-            X[:, :, k], q_list = propagation_locallyOptimal_noEvent(Xr, yh, JP_m,
-                JP_s, sys, Vn)
-        end
+        X[:, :, k], q_list = propagation_locallyOptimal(Xr, Z[:, k],
+            sys, yh, Vn, Γ[k])
 
         # Weight
         if Γ[k] == 1

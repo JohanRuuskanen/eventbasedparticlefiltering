@@ -1,7 +1,5 @@
 module EventBasedParticleFiltering
 
-    println("Got here")
-
     export  sys_params,
             #lin_sys_params,
             output,
@@ -29,8 +27,6 @@ module EventBasedParticleFiltering
     using StatsBase
     using Distributions
     using LinearAlgebra
-
-    println("Got here too")
 
     include("funcs/filters.jl")
     include("funcs/filters_eventbased.jl")
