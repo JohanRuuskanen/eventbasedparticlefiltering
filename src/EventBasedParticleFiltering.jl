@@ -15,7 +15,8 @@ module EventBasedParticleFiltering
             ebse,
             bpf,
             apf,
-            kalman_filter
+            kalman_filter,
+            systematic_resampling
 
     using JLD
     using PyPlot

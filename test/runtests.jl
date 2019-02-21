@@ -7,7 +7,8 @@ include("framework.jl")
 
 my_tests = ["test_examples",
             "test_plotting",
-            "test_misc"]
+            "test_misc",
+            "test_resampling"]
 
 
 run_tests(my_tests)
