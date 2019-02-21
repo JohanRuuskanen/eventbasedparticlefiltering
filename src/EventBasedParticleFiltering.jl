@@ -15,7 +15,8 @@ module EventBasedParticleFiltering
             ebse,
             bpf,
             apf,
-            kalman_filter
+            kalman_filter,
+            propagation_bootstrap
 
     using JLD
     using PyPlot
@@ -28,6 +29,7 @@ module EventBasedParticleFiltering
     include("funcs/filters_eventbased.jl")
     include("funcs/misc.jl")
     include("funcs/plotting.jl")
+    include("funcs/propagation.jl")
     include("funcs/resampling.jl")
 
 end
