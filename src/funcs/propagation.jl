@@ -37,7 +37,7 @@ function propagation_locallyOptimal_noEvent(Xr::Array{Float64,2},
     X = zeros(size(Xr))
     q_list = Array{Distribution}(undef, N)
 
-    for i = 1:par.N
+    for i = 1:N
 
         μ = JP_m(Xr[i, :])
         Σ = JP_s(sys.R .+ Vn)

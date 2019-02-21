@@ -27,8 +27,8 @@ sys = sys_params(A, C, Q, R, T)
 x, y = sim_sys(sys)
 
 # For estimation
-par_bpf = pf_params(N, "MBT", N/2)
-par_apf = pf_params(N, "MBT", N/2)
+par_bpf = pf_params(N, "SOD", N/2)
+par_apf = pf_params(N, "SOD", N/2)
 
 # Using benchmarktools or time?
 # Create struct to incorporate output parameters?

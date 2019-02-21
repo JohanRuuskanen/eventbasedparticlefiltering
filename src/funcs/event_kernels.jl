@@ -10,9 +10,11 @@ function eventSampling(y::Array{Float64,1}, z::Array{Float64,1},
         error("No such event kernel is implemented!")
     end
 
+
     if norm(z - y) >= δ
         γ = 1
         z = y
+        yh = zeros(M)
     else
         γ = 0
         # Discretisize the uniform distribution, currently only supports dim(y) = 1
