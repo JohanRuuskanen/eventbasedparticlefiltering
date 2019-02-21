@@ -79,11 +79,7 @@ function ebpf(y, sys, par, δ)
             S[:, k] = collect(1:N)
         end
 
-
-        # Propagate
-        for i = 1:N
-            X[i, :, k] = A*Xr[i, :] + rand(MvNormal(zeros(nx), Q))
-        end
+        X[:, :, k] = propagation_bootstrap(Xr, sys)
 
         # Weight
         if Γ[k] == 1
