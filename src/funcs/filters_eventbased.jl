@@ -67,7 +67,7 @@ function ebpf(y, sys, par, δ)
         Neff[k] = 1 ./ sum(W[:, k-1].^2)
         if Neff[k] <= N_T
 
-            idx = systematic_resampling(W[:, k-1])
+            idx = resampling_systematic(W[:, k-1])
 
             Xr = X[idx, :, k-1]
             Wr = 1/N .* ones(N, 1)
@@ -251,7 +251,7 @@ function eapf(y, sys, par, δ)
         Neff[k] = 1/sum(V[:, k-1].^2)
         if Neff[k] <= N_T
 
-            idx = systematic_resampling(V[:, k-1])
+            idx = resampling_systematic(V[:, k-1])
 
             Xr = X[idx, :, k-1]
             Wr = 1/N * ones(N, 1)
