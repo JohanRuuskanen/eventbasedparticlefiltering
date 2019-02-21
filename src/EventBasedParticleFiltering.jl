@@ -16,7 +16,10 @@ module EventBasedParticleFiltering
             bpf,
             apf,
             kalman_filter,
-            propagation_bootstrap
+            propagation_bootstrap,
+            propagation_locallyOptimal_newEvent,
+            propagation_locallyOptimal_noEvent,
+            eventSampling
 
     using JLD
     using PyPlot

@@ -187,6 +187,10 @@ function eapf(y, sys, par, δ)
                 [C*Q] [C*Q*C' + P]]
     for k = 2:T
 
+        xh[:, k-1] = W[:, k-1]' * X[:,:,k-1]
+        Z[:, k], Γ[k], yh = eventSampling(y[:,k], Z[:, k-1], xh[:, k-1], sys, par, δ, M)
+
+        #=
         if par.eventKernel == "SOD"
             z = Z[:, k-1]
         elseif par.eventKernel == "MBT"
@@ -208,6 +212,7 @@ function eapf(y, sys, par, δ)
             # dim(y) = 1
             yh = vcat(range(Z[:, k] .- δ, stop=(Z[:, k] .+ δ), length=M)...)
         end
+        =#
 
         # Calculate auxiliary weights
         if Γ[k] == 1
@@ -262,72 +267,11 @@ function eapf(y, sys, par, δ)
 
         # Propagate
         if Γ[k] == 1
-            for i = 1:N
-
-                #=
-                S = (inv(Q) + C'*inv(R)*C) \ eye(Q)
-
-                μ = S*(inv(Q)*A*Xr[i, :] + C'*inv(R)*Z[:, k])
-                Σ = S
-
-                Σ = fix_sym(Σ)
-                =#
-
-                μ = JP_m(Xr[i, :])
-                Σ = JP_s(R)
-
-                P = fix_sym(Σ[1,1] - Σ[1, 2]*inv(Σ[2, 2])*Σ[1,2]')
-
-                q_list[i] = MvNormal(μ[1] + Σ[1,2]*inv(Σ[2,2])*(Z[:,k] - μ[2]), P)
-                X[i, :, k] = rand(q_list[i])
-            end
+            X[:, :, k], q_list = propagation_locallyOptimal_newEvent(Xr, Z[:, k],
+                JP_m, JP_s, sys)
         else
-            for i = 1:par.N
-                #=
-                S = (inv(Q) + C'*inv(R + Vn)*C) \ eye(Q)
-
-                μ_func(yh) = S * (inv(Q)*A*Xr[i, :] + C'*inv(R + Vn)*yh)
-                Σ = S
-
-                Σ = fix_sym(Σ)
-
-                wh = zeros(M)
-                for j = 1:M
-                    wh[j] = pdf(MvNormal(C*A*Xr[i, :], C*Q*C' + R + Vn), yh[j, :])
-                end
-
-                if sum(wh) > 0
-                    wh = wh ./ sum(wh)
-                else
-                    println("Bad conditioned weights for Mixture Gaussian; resetting to uniform")
-                    wh = 1 / M * ones(M)
-                end
-                =#
-
-                μ = JP_m(Xr[i, :])
-                Σ = JP_s(R .+ Vn)
-
-                wh = zeros(M)
-                for j = 1:M
-                    wh[j] = pdf(MvNormal(μ[2], Σ[2, 2]), yh[j, :])
-                end
-
-                if sum(wh) > 0
-                    wh = wh ./ sum(wh)
-                else
-                    println("Bad conditioned weights for Mixture Gaussian; resetting to uniform")
-                    wh = 1 / M * ones(M)
-                end
-
-
-                P = fix_sym(Σ[1,1] .- Σ[1, 2]*inv(Σ[2, 2])*Σ[1,2]')
-                μ_func(yh) = μ[1] .+ Σ[1,2]*inv(Σ[2,2])*(yh .- μ[2])
-
-                MD = MixtureModel(map(y -> MvNormal([μ_func(y)...], P), yh), wh)
-
-                q_list[i] = MD
-                X[i, :, k] = rand(q_list[i])
-            end
+            X[:, :, k], q_list = propagation_locallyOptimal_noEvent(Xr, yh, JP_m,
+                JP_s, sys, Vn)
         end
 
         # Weight
