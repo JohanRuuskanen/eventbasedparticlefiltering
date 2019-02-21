@@ -25,7 +25,7 @@
 
     @test try sim_sys(sys); true catch; false end
 
-    @test try fix_sym(ones(n, n)); true catch; false end
+    @test try EP.fix_sym(ones(n, n)); true catch; false end
 
     x, y = sim_sys(sys)
     @test typeof(x) == typeof(y) == Array{Float64,2}
@@ -40,7 +40,7 @@
     @test isempty(findall(k -> isnan(k), x))
     @test isempty(findall(k -> isnan(k), y))
 
-    Σ = fix_sym(Random.rand(m, m), warning=false)
+    Σ = EP.fix_sym(Random.rand(m, m), warning=false)
     @test typeof(Σ) == Array{Float64,2}
     @test size(Σ) == (m,m)
     @test issymmetric(Σ)

@@ -3,6 +3,8 @@ using Random
 using LinearAlgebra
 using EventBasedParticleFiltering
 
+const EP = EventBasedParticleFiltering
+
 include("framework.jl")
 
 my_tests = ["test_examples",
