@@ -15,6 +15,8 @@ function ebpf(y, sys, par, δ)
     T = sys.T
     N = par.N
 
+    M = 10
+
     nx = size(A, 1)
     ny = size(C, 1)
 
@@ -23,6 +25,7 @@ function ebpf(y, sys, par, δ)
     S = zeros(N, T)
 
     xh = zeros(nx, T)
+    yh = zeros(M)
 
     Z = zeros(ny, T)
     Γ = zeros(T)
@@ -45,24 +48,9 @@ function ebpf(y, sys, par, δ)
 
     for k = 2:T
 
-        if par.eventKernel == "SOD"
-            z = Z[:, k-1]
-        elseif par.eventKernel == "MBT"
-            xh[:, k] = W[:, k-1]' * X[:,:,k-1]
-            z = C*A*xh[:, k-1]
-        else
-            error("No such event kernel is implemented!")
-        end
-
-        # Run event kernel
-        if norm(z - y[:, k]) >= δ
-            Γ[k] = 1
-            Z[:, k] = y[:, k]
-        else
-            Γ[k] = 0
-            Z[:, k] = z
-        end
-        #println(k, z, y[:, k], Γ[k])
+        xh[:, k-1] = W[:, k-1]' * X[:,:,k-1]
+        Γ[k] = eventSampling!(view(Z, :, k), yh, view(y,:,k), view(Z, :, k-1),
+            view(xh,:, k-1), sys, par, δ, M)
 
         Neff[k] = 1 ./ sum(W[:, k-1].^2)
         if Neff[k] <= N_T
@@ -96,9 +84,9 @@ function ebpf(y, sys, par, δ)
                 # constrained bayesian state estimation
                 D = Normal((C*X[i, :, k])[1], R[1])
                 #yh = C*(A*X[i, :, k] + rand(MvNormal(zeros(nx), Q))) + rand(MvNormal(zeros(ny), R))
-                yh = C*X[i, :, k] #+ rand(MvNormal(zeros(ny), R))
-                if norm(Z[:, k] -  yh) < δ
-                    W[i, k] = log(Wr[i]) + log(pdf(D, yh[1]))
+                yp = C*X[i, :, k] #+ rand(MvNormal(zeros(ny), R))
+                if norm(Z[:, k] -  yp) < δ
+                    W[i, k] = log(Wr[i]) + log(pdf(D, yp[1]))
                 else
                     W[i, k] = -Inf
                 end
@@ -190,7 +178,8 @@ function eapf(y, sys, par, δ)
     for k = 2:T
 
         xh[:, k-1] = W[:, k-1]' * X[:,:,k-1]
-        Γ[k] = eventSampling!(view(Z, :, k), yh, view(y,:,k), view(Z, :, k-1), view(xh,:, k-1), sys, par, δ, M)
+        Γ[k] = eventSampling!(view(Z, :, k), yh, view(y,:,k), view(Z, :, k-1),
+            view(xh,:, k-1), sys, par, δ, M)
 
         # Calculate auxiliary weights
         if Γ[k] == 1

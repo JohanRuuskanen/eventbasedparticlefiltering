@@ -1,4 +1,4 @@
-@testset "test_events" begin
+@testset "test_filtering" begin
 
     function local_tests(output, par)
         @test size(output.X) == (N, nx, T)
@@ -39,7 +39,7 @@
 
         if sum(output.Γ) < T-1
             @test all(x -> x, [mse_0[i] > mse_1[i] for i = 1:nx])
-            @test all(x -> x < 5, mse_0)
+            @test all(x -> x < 6, mse_0)
         end
 
         @test all(x -> x < 2, mse_1)
