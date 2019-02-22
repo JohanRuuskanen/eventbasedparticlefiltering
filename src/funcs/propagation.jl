@@ -2,8 +2,13 @@
 function propagation_bootstrap(Xr::Array{Float64,2}, sys::sys_params)
     N, M = size(Xr)
     X = zeros(size(Xr))
+    distribution = MvNormal(zeros(M), sys.Q)
+    rvec = Array{Float64,1}(undef, M)
     for i = 1:N
-        X[i, :] = sys.A*Xr[i, :] + rand(MvNormal(zeros(M), sys.Q))
+        # X[i,:] = sys.A*Xr[i, :] + rand!(distribution, rvec)
+        rand!(distribution, rvec)
+        @views mul!(X[i,:], sys.A, Xr[i, :])
+        @inbounds X[i, :] .+= rvec
     end
     return X
 end
