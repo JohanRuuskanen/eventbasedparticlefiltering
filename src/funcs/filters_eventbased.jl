@@ -232,8 +232,6 @@ function eapf(y, sys, par, δ)
             S[:, k] = collect(1:N)
         end
 
-        #
-
         # Propagate
         X[:, :, k], q_list = propagation_locallyOptimal(Xr, Z[:, k],
             sys, yh, Vn, Γ[k])

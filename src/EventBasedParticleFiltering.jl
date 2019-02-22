@@ -17,8 +17,7 @@ module EventBasedParticleFiltering
             apf,
             kalman_filter,
             propagation_bootstrap!,
-            propagation_locallyOptimal_newEvent,
-            propagation_locallyOptimal_noEvent,
+            propagation_locallyOptimal,
             eventSampling!
 
     using JLD
