@@ -12,6 +12,7 @@ my_tests = ["test_examples",
             "test_plotting",
             "test_misc",
             "test_propagation",
-            "test_resampling"]
+            "test_resampling",
+            "test_events"]
 
 run_tests(my_tests)
