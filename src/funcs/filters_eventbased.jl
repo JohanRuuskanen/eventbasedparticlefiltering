@@ -222,7 +222,7 @@ function eapf(y, sys, par, δ)
             idx = resampling_systematic(V[:, k-1])
 
             Xr = X[idx, :, k-1]
-            Wr = 1/N * ones(N, 1)
+            Wr = 1/N * ones(N)
             q_aux_list = q_aux_list[idx]
             res[k] = 1
             S[:, k] = idx
@@ -237,56 +237,8 @@ function eapf(y, sys, par, δ)
             sys, yh, Vn, Γ[k])
 
         # Weight
-        if Γ[k] == 1
-            for i = 1:par.N
-                if res[k] == 1
-                    W[i, k] = log(Wr[i]) + log(pdf(MvNormal(C*X[i, :, k], R), Z[:,k])) +
-                                log(pdf(MvNormal(A*Xr[i, :], Q), X[i, :, k])) -
-                                log(pdf(q_list[i], X[i, :, k])) -
-                                log(pdf(q_aux_list[i], Z[:, k]))
-                else
-                    W[i, k] = log(Wr[i]) + log(pdf(MvNormal(C*X[i, :, k], R), Z[:,k])) +
-                                log(pdf(MvNormal(A*Xr[i, :], Q), X[i, :, k])) -
-                                log(pdf(q_list[i], X[i, :, k]))
-                end
-            end
-        else
-            for i = 1:par.N
-                # Likelihood
-                #D = Normal((C*X[i, :, k])[1], R[1])
-                #py = cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ)
-
-                # Likelihood state constrained
-                D = Normal((C*X[i, :, k])[1], R[1])
-                yp = C*X[i, :, k]
-                if norm(Z[:, k] - yp) < δ
-                    py = pdf(D, yp[1])
-                else
-                    py = 0
-                end
-
-                # Propagation
-                px = pdf(MvNormal(A*Xr[i, :], Q), X[i, :, k])
-
-                # proposal distribution
-                q = pdf(q_list[i], X[i, :, k])
-
-                # Predictive likelihood
-                pL = 0
-                for j = 1:M
-                    pL += pdf(q_aux_list[i], yh[j, :])
-                end
-                pL /= M
-
-                if res[k] == 1
-                    W[i, k] = log(Wr[i]) + log(py) + log(px) - log(pL) - log(q)
-                else
-                    W[i, k] = log(Wr[i]) + log(py) + log(px) - log(q)
-                end
-
-            end
-        end
-
+        calculate_weights!(view(W, :, k), view(X, :, :, k), view(Z, :, k), Wr, Xr,
+            yh, q_list, q_aux_list, res[k], Γ[k], δ, sys, par)
 
         if maximum(W[:, k]) > -Inf
             w_max = maximum(W[:, k])

@@ -18,7 +18,8 @@ module EventBasedParticleFiltering
             kalman_filter,
             propagation_bootstrap!,
             propagation_locallyOptimal,
-            eventSampling!
+            eventSampling!,
+            calculate_weights!
 
     using JLD
     using PyPlot
@@ -34,5 +35,6 @@ module EventBasedParticleFiltering
     include("funcs/plotting.jl")
     include("funcs/propagation.jl")
     include("funcs/resampling.jl")
+    include("funcs/weighting.jl")
 
 end
