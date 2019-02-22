@@ -1,25 +1,26 @@
 
-function eventSampling(y::Array{Float64,1}, z::Array{Float64,1},
-     xh::Array{Float64,1}, sys::sys_params, par::pf_params, δ, M)
+function eventSampling!(zout::AbstractArray{T,1}, yhout::AbstractArray{T,1},
+     y::AbstractArray{T,1}, z::AbstractArray{T,1}, xh::AbstractArray{T,1},
+     sys::sys_params, par::pf_params, δ, M) where T <: Real
 
     if par.eventKernel == "SOD"
-        z = z
+        zout .= z
     elseif par.eventKernel == "MBT"
-        z = sys.C * sys.A * xh
+        zout .= sys.C * sys.A * xh
     else
         error("No such event kernel is implemented!")
     end
-    
+
     if norm(z - y) >= δ
         γ = 1
-        z = y
-        yh = repeat(y, M)
+        zout .= y
+        yhout .= NaN # repeat(y, M)
     else
         γ = 0
         # Discretisize the uniform distribution, currently only supports dim(y) = 1
-        yh = vcat(range(z .- δ, stop=(z .+ δ), length=M)...)
+        yhout .= vcat(range(zout .- δ, stop=(zout .+ δ), length=M)...)
     end
 
-    return z, γ, yh
+    return γ
 
 end

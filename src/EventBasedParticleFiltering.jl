@@ -19,7 +19,7 @@ module EventBasedParticleFiltering
             propagation_bootstrap,
             propagation_locallyOptimal_newEvent,
             propagation_locallyOptimal_noEvent,
-            eventSampling
+            eventSampling!
 
     using JLD
     using PyPlot

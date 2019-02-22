@@ -148,6 +148,8 @@ function eapf(y, sys, par, δ)
     Vn = L / 2
     # ===
 
+    yh = zeros(M)
+
     nx = size(A, 1)
     ny = size(C, 1)
 
@@ -188,7 +190,7 @@ function eapf(y, sys, par, δ)
     for k = 2:T
 
         xh[:, k-1] = W[:, k-1]' * X[:,:,k-1]
-        Z[:, k], Γ[k], yh = eventSampling(y[:,k], Z[:, k-1], xh[:, k-1], sys, par, δ, M)
+        Γ[k] = eventSampling!(view(Z, :, k), yh, view(y,:,k), view(Z, :, k-1), view(xh,:, k-1), sys, par, δ, M)
 
         # Calculate auxiliary weights
         if Γ[k] == 1
