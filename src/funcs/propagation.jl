@@ -1,7 +1,7 @@
 
-function propagation_bootstrap(Xr::Array{Float64,2}, sys::sys_params)
+function propagation_bootstrap!(X::AbstractArray{T,2}, Xr::AbstractArray{T,2},
+    sys::sys_params) where T <: Real
     N, M = size(Xr)
-    X = zeros(size(Xr))
     distribution = MvNormal(zeros(M), sys.Q)
     rvec = Array{Float64,1}(undef, M)
     for i = 1:N
@@ -13,8 +13,8 @@ function propagation_bootstrap(Xr::Array{Float64,2}, sys::sys_params)
     return X
 end
 
-function propagation_locallyOptimal(Xr::Array{Float64,2}, z::Array{Float64,1},
-    sys::sys_params, yh, Vn, γ)
+function propagation_locallyOptimal(Xr::AbstractArray{T,2}, z::AbstractArray{T,1},
+    sys::sys_params, yh, Vn, γ) where T <: Real
 
     JP_m(x) = [sys.A * x, sys.C * sys.A * x]
     JP_s(P) = [[sys.Q] [sys.Q*sys.C'];

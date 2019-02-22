@@ -6,7 +6,9 @@
     sys = create_params(m, n, T)
 
     X = zeros(N, m, T)
-    X_new = propagation_bootstrap(X[:, :, 1], sys)
+    propagation_bootstrap!(view(X, :, :, 2), X[:, :, 1], sys)
+
+    X_new = X[:, :, 2]
 
     err_mean = abs.(mean(X_new, dims=1))
     err_var = abs.(var(X_new, dims=1)) .- 1

@@ -67,7 +67,7 @@ function ebpf(y, sys, par, δ)
             S[:, k] = collect(1:N)
         end
 
-        X[:, :, k] = propagation_bootstrap(Xr, sys)
+        propagation_bootstrap!(view(X, :, :, k), Xr, sys)
 
         # Weight
         if Γ[k] == 1
