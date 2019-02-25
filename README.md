@@ -25,9 +25,10 @@ Don't run
 as the plotting windows will automatically close when the code finished.
 
 === To run the testing ===
-Run the test/runtest.jl script. Easiest done by the following terminal command
-
-> julia test/runtest.jl
+Easiest done by activating the package and type test. This is done by opening
+your package manager in Julia (type "]" in your Julia console) and write
+> activate /path/to/packate
+> test
 
 === Notice ===
 This package is very much still a work in progress and thus there is still much
