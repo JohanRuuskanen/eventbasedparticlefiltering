@@ -34,7 +34,7 @@ Easiest done by activating the package and type test. This is done by opening
 your package manager in Julia (type "]" in your Julia console) and write
 
 ```
-activate /path/to/packate\n
+activate /path/to/packate
 test
 ```
 
