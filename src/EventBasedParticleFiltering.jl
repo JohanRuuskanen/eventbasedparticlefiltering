@@ -19,7 +19,8 @@ module EventBasedParticleFiltering
             propagation_bootstrap!,
             propagation_locallyOptimal,
             eventSampling!,
-            calculate_weights!
+            calculate_weights!,
+            run_example
 
     using JLD
     using PyPlot

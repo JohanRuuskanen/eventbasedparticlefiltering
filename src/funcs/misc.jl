@@ -48,3 +48,9 @@ function fix_sym(Σ::Array{Float64,2}; lim=1e-9, warning=true)
     end
     return Σ_new
 end
+
+function run_example(file)
+    current_path = @__DIR__
+    example_path = current_path[1:end-9] * "examples/"
+    include(example_path*file)
+end
