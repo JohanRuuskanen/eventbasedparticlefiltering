@@ -9,4 +9,4 @@ before_install:
   - julia --color=yes -e 'import Pkg; ENV["PYTHON"]="python"; Pkg.build("PyCall")'
 
 after_success:
-- julia -e 'cd(Pkg.dir("MyPkg")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder()
+- julia -e 'import Pkg; import EventBasedParticleFiltering; cd(joinpath(dirname(pathof(EventBasedParticleFiltering)), "..")); cd(Pkg.dir("MyPkg")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
