@@ -5,5 +5,5 @@ julia:
 before_install:
   - sudo apt-get install -y python-pip
   - sudo pip install matplotlib
-  - julia -e 'import Pkg; Pkg.add("PyCall")'
-  - julia -e 'import Pkg; ENV[PYTHON]="python"; Pkg.build("PyCall")'
+  - julia --color=yes -e 'import Pkg; Pkg.add("PyCall")'
+  - julia --color=yes -e 'import Pkg; ENV["PYTHON"]="python"; Pkg.build("PyCall")'
