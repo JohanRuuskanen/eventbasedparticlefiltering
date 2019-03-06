@@ -3,5 +3,7 @@ julia:
   - 1.0
   - 1.1
 before_install:
-  - sudo apt-get install -y python python-pip
+  - sudo apt-get install -y python virtualenv
+  - virtualenv -p python venv
+  - source venv/bin/activate
   - pip install matplotlib
