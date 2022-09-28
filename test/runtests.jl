@@ -1,5 +1,7 @@
 using Test
 using Random
+using Calculus
+using StatsBase
 using Statistics
 using Distributions
 using LinearAlgebra
@@ -9,13 +11,12 @@ const EP = EventBasedParticleFiltering
 
 include("framework.jl")
 
-my_tests = ["test_examples",
-            "test_plotting",
+my_tests = ["test_resampling",
             "test_misc",
-            "test_propagation",
-            "test_weighting",
-            "test_resampling",
+            "test_proposals",
             "test_events",
-            "test_filtering"]
+            "test_weighting",
+            "test_filtering",
+            "test_predcomp"]
 
 run_tests(my_tests)

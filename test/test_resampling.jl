@@ -20,14 +20,14 @@
     N = 1000
     M = 10000
 
-    W = ones(N, 2) ./ N
+    W = ones(N) ./ N
 
-    idx = EP.resampling_systematic(W[:, 1])
+    idx = EP.resampling_systematic(W)
     # Check that the size and type are correct
     @test size(idx, 1) == N
     @test typeof(idx) == Array{Int64, 1}
 
-    idx = EP.resampling_multinomial(W[:, 1])
+    idx = EP.resampling_multinomial(W)
     # Check that the size and type are correct
     @test size(idx, 1) == N
     @test typeof(idx) == Array{Int64, 1}
@@ -39,6 +39,5 @@
     diff_multinomial = sampling_uniform(N, M, EP.resampling_multinomial)
     @test (diff_systematic .< M * 0.15) == BitArray{1}(ones(N))
     @test (diff_multinomial .< M * 0.15) == BitArray{1}(ones(N))
-
 
 end

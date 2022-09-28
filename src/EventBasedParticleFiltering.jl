@@ -1,41 +1,39 @@
 module EventBasedParticleFiltering
 
-    export  sys_params,
-            #lin_sys_params,
-            output,
-            pf_params,
-            sim_sys,
-            sim_lin_sys,
-            fix_sym,
-            plot_particle_trace,
-            plot_data,
-            plot_effective_sample_size,
-            ebpf,
-            eapf,
-            ebse,
-            bpf,
-            apf,
-            kalman_filter,
-            propagation_bootstrap!,
-            propagation_locallyOptimal,
-            eventSampling!,
-            calculate_weights!,
-            run_example
-
-    using JLD
     using PyPlot
     using Random
+    using Cubature
+    using Calculus
     using StatsBase
+    using Parameters
+    using KernelDensity
     using Distributions
     using LinearAlgebra
 
-    include("funcs/filters.jl")
-    include("funcs/filters_eventbased.jl")
     include("funcs/misc.jl")
     include("funcs/event_kernels.jl")
-    include("funcs/plotting.jl")
-    include("funcs/propagation.jl")
     include("funcs/resampling.jl")
     include("funcs/weighting.jl")
+    include("funcs/filters.jl")
+    include("funcs/filters_eventbased.jl")
+    include("funcs/plotting_funcs.jl")
+    include("funcs/proposals.jl")
+    include("funcs/propagation.jl")
+
+    export  compute_err_metrics,
+            ebpf,
+            ebpf_options,
+            kernel_IBT,
+            kernel_SOD,
+            likelihood_analytic,
+            likelihood_cubature,
+            likelihood_MC,
+            plot_measurement_data,
+            plot_particle_trace,
+            plot_particle_hist,
+            pftype_bootstrap,
+            pftype_auxiliary,
+            sim_sys,
+            system
 
 end

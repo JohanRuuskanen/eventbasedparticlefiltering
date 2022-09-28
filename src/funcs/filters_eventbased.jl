@@ -1,340 +1,194 @@
-"""
-Event driven particle filters using SOD
-"""
-function ebpf(y, sys, par, δ)
+
+function ebpf(y::AbstractArray{T,2}, opt::ebpf_options;
+                X0=Array{T,2}(undef,0,0)::AbstractArray{T,2}) where T <: AbstractFloat
     """
-    Event-based bootstrap particle filter
+    Event-based particle filter
     """
 
-    # Extract parameters
-    A = sys.A
-    C = sys.C
-    Q = sys.Q
-    R = sys.R
+    # Perform some assertions to catch errors early on
 
-    T = sys.T
-    N = par.N
+    @assert opt.N > 0
+    @assert opt.sys.nx > 0
+    @assert opt.sys.ny > 0
+    @assert opt.sys.t_end > 0
 
-    M = 10
+    @assert opt.triggerat in ["events", "always", "never"]
 
-    nx = size(A, 1)
-    ny = size(C, 1)
+    @assert all(opt.kernel.δ .>= 0)
+    @assert length(opt.kernel.δ) == opt.sys.ny
 
-    X = zeros(N, nx, T)
-    W = zeros(N, T)
-    S = zeros(N, T)
+    @assert try opt.sys.px(ones(opt.sys.nx), 1); true catch; false end
+    @assert try opt.sys.py(ones(opt.sys.nx), 1); true catch; false end
 
-    xh = zeros(nx, T)
-    yh = zeros(M)
+    @assert typeof(opt.sys.px(ones(opt.sys.nx), 1)) <: Distribution
+    @assert typeof(opt.sys.py(ones(opt.sys.nx), 1)) <: Distribution
 
-    Z = zeros(ny, T)
-    Γ = zeros(T)
+    @assert size(mean(opt.sys.px(ones(opt.sys.nx), 1))) == (opt.sys.nx,)
+    @assert size(mean(opt.sys.py(ones(opt.sys.nx), 1))) == (opt.sys.ny,)
 
-    Neff = zeros(T)
-    fail = zeros(T)
-    res = zeros(T)
+    if typeof(opt.pftype) <: pftype_auxiliary
+        @assert opt.pftype.D > 0
 
-    X[:, :, 1] = rand(Normal(0, 1), N, nx)
-    W[:, 1] = 1/N .* ones(N, 1)
-    S[:, 1] = collect(1:N)
+        @assert try opt.pftype.qv(ones(opt.sys.nx), 1, opt,
+            V=Diagonal(ones(opt.sys.ny))); true catch; false end
+        @assert try opt.pftype.q(ones(opt.sys.nx), 1, ones(opt.sys.ny), opt,
+            V=Diagonal(ones(opt.sys.ny))); true catch; false end
 
-    xh[:, 1] = W[:, 1]' * X[:,:,1]
+        @assert typeof(opt.pftype.qv(ones(opt.sys.nx), 1, opt,
+            V=Diagonal(ones(opt.sys.ny)))) <: Distribution
+        @assert typeof(opt.pftype.q(ones(opt.sys.nx), 1, ones(opt.sys.ny), opt,
+            V=Diagonal(ones(opt.sys.ny)))) <: Distribution
 
-    idx = collect(1:N)
-    Xr = X[:, :, 1]
-    Wr = W[:, 1]
-
-    N_T = par.Nlim
-
-    for k = 2:T
-
-        xh[:, k-1] = W[:, k-1]' * X[:,:,k-1]
-        Γ[k] = eventSampling!(view(Z, :, k), yh, view(y,:,k), view(Z, :, k-1),
-            view(xh,:, k-1), sys, par, δ, M)
-
-        Neff[k] = 1 ./ sum(W[:, k-1].^2)
-        if Neff[k] <= N_T
-
-            idx = resampling_systematic(W[:, k-1])
-
-            Xr = X[idx, :, k-1]
-            Wr = 1/N .* ones(N, 1)
-            res[k] = 1
-            S[:, k] = idx
-        else
-            Xr = X[:, :, k-1]
-            Wr = W[:, k-1]
-            S[:, k] = collect(1:N)
-        end
-
-        propagation_bootstrap!(view(X, :, :, k), Xr, sys)
-
-        # Weight
-        if Γ[k] == 1
-            for i = 1:N
-                W[i, k] = log(Wr[i]) + log(pdf(MvNormal(C*X[i, :, k], R), y[:, k]))
-            end
-        else
-            for i = 1:N
-                # There are no general cdf for multivariate distributions, this
-                # only works if y is a scalar
-                #D = Normal((C*X[i, :, k])[1], R[1])
-                #W[i, k] = log(Wr[i]) + log((cdf(D, Z[k] + δ) - cdf(D, Z[k] - δ)))
-
-                # constrained bayesian state estimation
-                D = Normal((C*X[i, :, k])[1], R[1])
-                #yh = C*(A*X[i, :, k] + rand(MvNormal(zeros(nx), Q))) + rand(MvNormal(zeros(ny), R))
-                yp = C*X[i, :, k] #+ rand(MvNormal(zeros(ny), R))
-                if norm(Z[:, k] -  yp) < δ
-                    W[i, k] = log(Wr[i]) + log(pdf(D, yp[1]))
-                else
-                    W[i, k] = -Inf
-                end
-
-            end
-        end
-
-        if maximum(W[:, k]) > -Inf
-            w_max = maximum(W[:, k])
-            W_norm = sum(exp.(W[:, k] - w_max*ones(N, 1)))
-            W[:, k] = exp.(W[:, k] - w_max*ones(N, 1)) / W_norm
-        else
-            println("Bad conditioned weights for EBPF! Resetting to uniform")
-            W[:, k] = 1/N * ones(N, 1)
-            fail[k] = 1
-            Neff[k] = 0
-        end
-
-
+        @assert size(mean(opt.pftype.qv(ones(opt.sys.nx), 1, opt,
+            V=Diagonal(ones(opt.sys.ny))))) == (opt.sys.ny,)
+        @assert size(mean(opt.pftype.q(ones(opt.sys.nx), 1, ones(opt.sys.ny), opt,
+            V=Diagonal(ones(opt.sys.ny))))) == (opt.sys.nx,)
     end
 
-    return output(X, W, S, Z, Γ, res, fail)
+    # Allocations
+    pfd = generate_pfd(opt, T=T)
+
+    if !isempty(X0)
+        pfd.X[:, :, 1] .= X0
+    else
+        pfd.X[:, :, 1] .= rand(Normal(0, 1), opt.N, opt.sys.nx)
+    end
+
+    pfd.W[:, 1] .= 1/opt.N .* ones(T, opt.N)
+    pfd.S[:, 1] .= collect(1:opt.N)
+
+    pfd.Xr[:, :, 1] .= pfd.X[:, :, 1]
+    pfd.Xp[:, :, 1] .= pfd.X[:, :, 1]
+
+    pfd.V[:, 1] .= zeros(T, opt.N)
+
+    pfd.Γ[1] = 1
+
+    # Filtering
+    if opt.predictive_computation
+        ebpf_predpost!(pfd, y, opt)
+    else
+        ebpf_ordinary!(pfd, y, opt)
+    end
+
+    return pfd
 end
 
-function eapf(y, sys, par, δ)
-    """
-    Event-based auxiliary particle filter
-    """
+function ebpf_ordinary!(pfd::particle_data, y::AbstractArray{T,2},
+    opt::ebpf_options) where T <: AbstractFloat
 
-    # Extract parameters
-    A = sys.A
-    C = sys.C
-    Q = sys.Q
-    R = sys.R
+    for k = 2:opt.sys.t_end
 
-    T = sys.T
-    N = par.N
-
-    # === For approximating the uniform distribution
-    # number of approximation points and their spacing
-    #M = 20 #ceil(2 * δ) + 1
-    #L = 2*δ / (M-1)
-    #Vn = L / sqrt(2)
-
-    M = 5 #ceil(2 * δ) + 1
-    L = 2*δ / (M)
-    Vn = L / 2
-    # ===
-
-    yh = zeros(M)
-
-    nx = size(A, 1)
-    ny = size(C, 1)
-
-    X = zeros(N, nx, T)
-    W = zeros(N, T)
-    V = zeros(N, T)
-    S = zeros(N, T)
-    xh = zeros(nx, T)
-
-    Z = zeros(ny, T)
-    Γ = zeros(T)
-
-    Neff = zeros(T)
-    res = zeros(T)
-    fail = zeros(T)
-
-    X[:, :, 1] = rand(Normal(0, 1), N, nx)
-    W[:, 1] = 1/N .* ones(N, 1)
-    V[:, 1] = 1/N .* ones(N, 1)
-    S[:, 1] = collect(1:N)
-    xh[:, 1] = W[:, 1]' * X[:,:,1]
-
-    idx = collect(1:N)
-
-    q_list = Array{Distribution}(undef, N)
-    q_aux_list = Array{Distribution}(undef, N)
-
-    Wr = W[:, 1]
-    Xr = X[:, :, 1]
-    Wr = W[:, 1]
-
-    N_T = par.Nlim
-    yh = zeros(M)
-
-    JP_m(x) = [A*x, C*A*x]
-    JP_s(P) = [[Q] [Q*C'];
-                [C*Q] [C*Q*C' + P]]
-    for k = 2:T
-
-        xh[:, k-1] = W[:, k-1]' * X[:,:,k-1]
-        Γ[k] = eventSampling!(view(Z, :, k), yh, view(y,:,k), view(Z, :, k-1),
-            view(xh,:, k-1), sys, par, δ, M)
-
-        # Calculate auxiliary weights
-        if Γ[k] == 1
-            for i = 1:N
-                μ = JP_m(X[i, :, k-1])
-                Σ = JP_s(R)
-
-                q_aux_list[i] = MvNormal(μ[2], Σ[2,2])
-                V[i, k-1] = log(W[i, k-1]) + log(pdf(q_aux_list[i], Z[:,k]))
-            end
-        else
-            for i = 1:par.N
-                μ = JP_m(X[i, :, k-1])
-                Σ = JP_s(R .+ Vn)
-
-                q_aux_list[i] = MvNormal(μ[2], Σ[2,2])
-
-                predLh = 0
-                for j = 1:M
-                    predLh += pdf(q_aux_list[i], yh[j, :])
-                end
-                predLh /= M
-
-                V[i, k-1] = log(W[i, k-1]) + log(predLh)
-            end
-        end
-        if maximum(V[:, k-1]) > -Inf
-            V_max = maximum(V[:, k-1])
-            V_norm = sum(exp.(V[:, k-1] - V_max*ones(N, 1)))
-            V[:, k-1] = exp.(V[:, k-1] - V_max*ones(N, 1)) / V_norm
-        else
-            println("Bad conditioned weights for Auxiliary variable! Resetting to W(k-1)")
-            V[:, k-1] = W[:, k-1]
-            fail[k] = 1
+        if opt.print_progress
+            print("Running $(k) / $(opt.sys.t_end) \r")
+            flush(stdout)
         end
 
-        Neff[k] = 1/sum(V[:, k-1].^2)
-        if Neff[k] <= N_T
+        generate_Hk!(pfd, y, k, opt)
 
-            idx = resampling_systematic(V[:, k-1])
+        eventtrigger!(pfd, y, k, opt)
 
-            Xr = X[idx, :, k-1]
-            Wr = 1/N * ones(N)
-            q_aux_list = q_aux_list[idx]
-            res[k] = 1
-            S[:, k] = idx
-        else
-            Xr = X[:, :, k-1]
-            Wr = W[:, k-1]
-            S[:, k] = collect(1:N)
+        create_qv_list!(pfd, y, k, opt)
+
+        resample!(pfd, k, opt)
+
+        create_q_list!(pfd, y, k, opt)
+
+        propagate!(pfd, k, opt)
+
+        calculate_weights!(pfd, y, k, opt)
+
+        if pfd.Γ[k] == 1 && opt.abort_at_trig
+            break
         end
-
-        # Propagate
-        X[:, :, k], q_list = propagation_locallyOptimal(Xr, Z[:, k],
-            sys, yh, Vn, Γ[k])
-
-        # Weight
-        calculate_weights!(view(W, :, k), view(X, :, :, k), view(Z, :, k), Wr, Xr,
-            yh, q_list, q_aux_list, res[k], Γ[k], δ, sys, par)
-
-        if maximum(W[:, k]) > -Inf
-            w_max = maximum(W[:, k])
-            W_norm = sum(exp.(W[:, k] - w_max*ones(N, 1)))
-            W[:, k] = exp.(W[:, k] - w_max*ones(N, 1)) / W_norm
-        else
-            println("Bad conditioned weights for EAPF! Resetting to uniform")
-            W[:, k] = 1/par.N * ones(par.N, 1)
-            fail[k] = 1
-        end
-
 
     end
-
-    return output(X, W, S, Z, Γ, res, fail)
 end
 
-"""
-Event-based state estimator
-"""
-function ebse(y, sys, δ)
+function ebpf_predpost!(pfd::particle_data, y::AbstractArray{T,2},
+    opt::ebpf_options) where T <: AbstractFloat
 
-    # Extract parameters
-    A = sys.A
-    C = sys.C
-    Q = sys.Q
-    R = sys.R
+    @assert haskey(opt.extra_params, "a") "Predictive computation needs quantile parameter a"
+    @assert 0.0 < opt.extra_params["a"] < 1.0 "Quantile parameter a needs to be in (0, 1)"
 
-    T = sys.T
+    function precompute!(k::Integer, pfd::particle_data, y::AbstractArray{T,2},
+        opt::ebpf_options)
 
-    # === For approximating the uniform distribution
-    # number of approximation points and their spacing
-    M = 6000 #ceil(2 * δ) + 1
-    L = 2*δ / (M-1)
+        p_tmp = 1
+        p_first = 0
+        p = 0
 
-    Vn = L / sqrt(2)
-    # ===
+        y_dummy = zeros(typeof(first(pfd.X)), 0, 0)
+        n = k
 
-    nx = size(A, 1)
-    ny = size(C, 1)
+        nh = opt.debug_save ? n : 1
+        nh_prev = opt.debug_save ? n-1 : 1
 
-    xp = zeros(nx, T)
-    Pp = zeros(nx, nx, T)
-    yp = zeros(ny, T)
-    Z = zeros(ny, T)
-    Γ = zeros(T)
+        while p < opt.extra_params["a"] && n < opt.sys.t_end
+            n += 1
 
-    x = zeros(nx, T)
-    P = zeros(nx, nx, T)
+            pfd.Γ[n] = 0
 
-    P[:,:,1] = Matrix{Float64}(I, nx, nx)
+            # need y to create SOD boundaries first step after a trigger
+            generate_Hk!(pfd, y, n, opt)
 
-    for k = 2:T
+            create_qv_list!(pfd, y_dummy, n, opt)
 
-        # Run event kernel, SOD
-        if norm(Z[:, k-1] - y[:, k]) >= δ
-            Γ[k] = 1
-            Z[:, k] = y[:, k]
-        else
-            Γ[k] = 0
-            Z[:, k] = Z[:, k-1]
+            resample!(pfd, n, opt)
 
-            # Discretisize the uniform distribution, currently only supports
-            # dim(y) = 1
-            yh = vcat(range(Z[:, k] .- δ, stop=(Z[:, k] .+ δ), length=M)...)
+            create_q_list!(pfd, y_dummy, n, opt)
+
+            propagate!(pfd, n, opt)
+
+            calculate_weights!(pfd, y_dummy, n, opt)
+
+            p_first = pfd.p_trig[n] * p_tmp
+            p_tmp = p_tmp * (1 - pfd.p_trig[n])
+            p += p_first
+
         end
 
-        # Predict
-        xp = A*x[:, k-1]
-        Pp = A*P[:, :, k-1]*A' + Q
-
-        # Update
-        S = inv(inv(Pp) + C'*inv(R)*C)
-
-        if Γ[k] == 1
-            x[:, k] = S*(inv(Pp)*xp + C'*inv(R)*Z[:, k])
-            P[:, :, k] = S
-        else
-            θ = zeros(2, M)
-            w = zeros(1, M)
-            for i = 1:M
-                θ[:, i] = S*(inv(Pp)*xp + C'*inv(R)*yh[i])
-                w[:, i] .= pdf(MvNormal(C*xp, C*Pp*C' .+ R .+ Vn), yh[i, :])
-            end
-            w /= sum(w)
-
-            for i = 1:M
-                x[:, k] += w[:, i] .* θ[:, i]
-            end
-
-            for i = 1:M
-                P[:, :, k] += w[:, i] .* (S + (x[:, k] - θ[:, i])*(x[:, k] - θ[:, i])')
-            end
-        end
+        return n + 1
     end
 
-    return x, P, Z, Γ
+    pfd.extra["triggerwhen"] = Array{Int64, 2}(undef, 0, 2)
+    n_hat = Array{Int64, 1}(undef, 0)
+    append!(n_hat, precompute!(1, pfd, y, opt))
 
+    for k = 2:opt.sys.t_end
+        #println("$k, $k_stop")
+        if opt.print_progress
+            print("Running $(k) / $(opt.sys.t_end) \r")
+            flush(stdout)
+        end
+
+        kh = opt.debug_save ? n : 1
+        kh_prev = opt.debug_save ? n-1 : 1
+
+        eventtrigger!(pfd, y, k, opt)
+
+        if k == n_hat[end]
+            pfd.Γ[k] = 1
+        end
+
+        # Compute new proposal posterior once we trigger
+        if pfd.Γ[k] == 1
+            pfd.extra["triggerwhen"] = vcat(pfd.extra["triggerwhen"], [n_hat[end] k])
+
+            create_qv_list!(pfd, y, k, opt)
+
+            resample!(pfd, k, opt)
+
+            create_q_list!(pfd, y, k, opt)
+
+            propagate!(pfd, k, opt)
+
+            calculate_weights!(pfd, y, k, opt)
+
+            append!(n_hat, precompute!(k, pfd, y, opt))
+        end
+
+    end
+
+    return pfd
 end

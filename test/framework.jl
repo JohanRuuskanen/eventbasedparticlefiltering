@@ -12,22 +12,18 @@ function test_script_crash(script_path)
     try
         include("$(script_path)")
         return true
-    catch
+    catch e
+        println(e)
         return false
     end
 end
 
-function create_params(m, n, T)
-    # Create a stable system
-    A = 0.2 * randn(m, m)
-    while !isempty(findall(x-> x >= 0.95, abs.(eigvals(A))))
-        A = 0.2 * randn(m, m)
+function estimate_output_monte_carlo(sys, p0; MC = 10000)
+    y = zeros(sys.ny, MC)
+    for k = 1:MC
+        x0 = rand(p0)
+        _, ytmp = sim_sys(sys, T=Float32, x0=x0)
+        y[:, k] = ytmp[:, 2]
     end
-
-    C = Random.rand(n, m)
-    Q = 1*Matrix{Float64}(I, m, m)
-    R = 0.1*Matrix{Float64}(I, n, n)
-
-    sys = try sys_params(A, C, Q, R, T) catch; false end
-    return sys
+    return mean(y, dims=2)[:], cov(y, dims=2)
 end

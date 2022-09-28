@@ -7,6 +7,7 @@ scripts = readdir(example_path)
 for script in scripts
     println("Testing "*script)
 
+    println(example_path * script)
     # For each example, test that it doesn't crash
     @test test_script_crash(example_path * script)
 end
